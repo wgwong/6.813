@@ -4,7 +4,7 @@
 class Util {
 	/**
 	 * Get one element by selector
-	 * @param selector {string}
+	 * @param selector {String}
 	 * @returns {Element}
 	 */
 	static one(selector) {
@@ -13,7 +13,7 @@ class Util {
 
 	/**
 	 * Get all elements that match a selector as an array
-	 * @param selector {string}
+	 * @param selector {String}
 	 * @returns {Array<Element>}
 	 */
 	static all(selector) {
@@ -22,7 +22,7 @@ class Util {
 
 	/**
 	 * Create an element and set a bunch of attributes on it
-	 * @param tag {string}
+	 * @param tag {String}
 	 * @param attributes {Object}
 	 * @returns {Element}
 	 */
@@ -38,7 +38,7 @@ class Util {
 
 	/**
 	 * Get a parameter from the URL query string
-	 * @param name {string}
+	 * @param name {String}
 	 */
 	static getURLParam(name) {
 		return new URL(location).searchParams.get(name);
@@ -47,7 +47,7 @@ class Util {
 	/**
 	 * Throws error if passed argument is not a number
 	 * @param input {number} Both actual Numbers and numeric strings are accepted
-	 * @param errorMsg {string}
+	 * @param errorMsg {String}
 	 */
 	static assertNumeric(input, errorMsg) {
 		if (isNaN(input)) {
@@ -101,8 +101,8 @@ class Util {
 	/**
 	 * Returns a promise that is resolved when the event fires
 	 * @param target {EventTarget|Array<EventTarget>}
-	 * @param eventName {string}
-	 * @param test {callback}
+	 * @param eventName {String}
+	 * @param test {callback} resolved when the event fires
 	 */
 	static async when(target, eventName, test = evt => true) {
 		if (Array.isArray(target)) {
@@ -127,7 +127,7 @@ class Util {
 	 * have stopped on one or more elements.
 	 * Caveat: The animations need to be *already* applied when this is called.
 	 * @param target {Element|Array<Element>}
-	 * @param animationName {string}
+	 * @param animationName {String}
 	 */
 	static afterAnimation(target, animationName) {
 		target = Array.isArray(target)? target : [target];

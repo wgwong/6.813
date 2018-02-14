@@ -10,7 +10,7 @@ const size = Math.min(10, Math.max(3, Util.getURLParam("size") || DEFAULT_BOARD_
 var dom = {};
 
 // data model at global scope for easier debugging
-// initialize board
+// initialize board model
 var board = new Board(size);
 
 // load a rule
@@ -28,7 +28,7 @@ Util.events(document, {
 		dom.controlColumn = Util.one("#controls"); // example
 
 		// Add events
-		Util.one("#buttonIDhere").addEventListener("click", { /* Your code here */ });
+		Util.one("#buttonIDhere").addEventListener("click", { /* Your code here */ }); // example
 	},
 
 	// Keyboard events arrive here
