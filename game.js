@@ -4,9 +4,13 @@ Math.seedrandom(0);
 // constants
 const DEFAULT_BOARD_SIZE = 8;
 // set size from URL or to default
+<<<<<<< HEAD
 const size = Math.min(10, Math.max(3, Util.getURLParam("size") || DEFAULT_BOARD_SIZE));
 const letterMapping = {1: 'a', 2: 'b', 3: 'c', 4: 'd', 5: 'e', 6: 'f', 7: 'g', 8: 'h'}
 const positionMapping = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7, 'h': 8}
+=======
+const size = Math.min(10, Math.max(3, +Util.getURLParam("size") || DEFAULT_BOARD_SIZE));
+>>>>>>> 99368e2b3dadea57e7ec08d7661473cc4c7355ae
 
 // Holds DOM elements that don’t change, to avoid repeatedly querying the DOM
 var dom = {};
