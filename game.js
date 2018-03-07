@@ -4,7 +4,7 @@ Math.seedrandom(0);
 // constants
 const DEFAULT_BOARD_SIZE = 8;
 // set size from URL or to default
-const size = Math.min(10, Math.max(3, Util.getURLParam("size") || DEFAULT_BOARD_SIZE));
+const size = Math.min(10, Math.max(3, +Util.getURLParam("size") || DEFAULT_BOARD_SIZE));
 
 // Holds DOM elements that don’t change, to avoid repeatedly querying the DOM
 var dom = {};
