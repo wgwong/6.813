@@ -26,22 +26,64 @@ PS2 - CandyCrush UI
 <script src="rules.js"></script>
 <script src="game.js"></script>
 
+<script
+  src="http://code.jquery.com/jquery-3.3.1.js"
+  integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+  crossorigin="anonymous"></script>
 
 </head>
 
 <body>
 
-<header>
-  Column 1
-</header>
 
-<main>
-  Column 2
-</main>
+	<table style="width:100%">
+		<tr>
+			<td>
+				<header>
+					<div class="title-text">Candy<br>Crush!</div>
+					<button id="newGameButton">New Game</button>
+				</header>
+			</td>
+			<td>
+				<main>
+					<div class="grid-wrapper">
+						<div class="grid-container board">
+							<div class="grid-header"></div>
+							<div class="grid-header">a</div>
+							<div class="grid-header">b</div>
+							<div class="grid-header">c</div>  
+							<div class="grid-header">d</div>
+							<div class="grid-header">e</div>
+							<div class="grid-header">f</div>  
+							<div class="grid-header">g</div>
+							<div class="grid-header">h</div>
+						</div>
 
-<div id="controls">
-  Column 3
-</div>
+						<div id="cellBoard" class="grid-container">
+						</div>
+					</div>
+				</main>
+			</td>
+			<td>
+				<div id="controls">
+					<div class="button-grid-container-one">
+						<div class="button-grid-item"><button id="upArrowButton" class="arrow-button" disabled><img src="graphics/dripicons/SVG/arrow-thin-up.svg" class="button-image"/></button></div>
+					</div>
+					<div class="button-grid-container-three">
+						<div class="button-grid-item"><button id="leftArrowButton" class="arrow-button" disabled><img src="graphics/dripicons/SVG/arrow-thin-left.svg" class="button-image"/></button></div>
+						<div class="button-grid-item"><input id="candyLocation" type="text" oninput="validateInput()"></div>
+						<div class="button-grid-item"><button id="rightArrowButton" class="arrow-button" disabled><img src="graphics/dripicons/SVG/arrow-thin-right.svg" class="button-image"/></button></div>
+					</div>
+					<div class="button-grid-container-one">
+						<div class="button-grid-item"><button id="downArrowButton" class="arrow-button" disabled><img src="graphics/dripicons/SVG/arrow-thin-down.svg" class="button-image"/></button></div>
+					</div>
+					<div class="button-grid-container-one">
+						<div class="button-grid-item"><button id="crushButton">Crush Once</button></div>
+					</div>
+				</div>
+			</td>
+		</tr>
+	</table>
 
 </body>
 
