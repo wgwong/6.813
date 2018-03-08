@@ -228,7 +228,7 @@ td {
 .button-grid-item {
 	text-align: center;
 	margin-top: 10px;
-	min-width: 120px;
+	width: 120px;
 }
 
 .arrow-button-image {
@@ -248,7 +248,7 @@ input[type=text] {
 	font-weight: bold;
 }
 
-@media (max-width: 900px) and (min-width: 600px) {
+@media (max-width: 1000px) and (min-width: 600px) {
 	.flex-container {
 		flex-direction: column;
 	}
@@ -278,20 +278,55 @@ input[type=text] {
 		flex-direction: column;
 	}
 	#score-label {
-		width: 80%;
+		width: 90vw;
 	}
 	#newGameButton {
-		width: 80%;
+		width: 90vw;
 	}
 	#showHintButton {
-		width: 80%;
+		width: 90vw;
 	}
-	/* TODO fix buggy
+
 	.board {
-		--board-size: 80%;
+		--board-size: 80vw;
 		--grid-gap: 1px;
 		--cell-outer: calc(var(--board-size) / var(--size));
 		--cell: calc(var(--cell-outer) - var(--grid-gap));
 	}
-	*/
+
+	#controls {
+		width: 90vw;
+	}
+
+	.button-grid-container-three {
+		width: 90vw;
+	}
+	.button-grid-container-one {
+		width: 90vw;
+	}
+
+	.button-grid-item {
+		width: 25vw;
+	}
+
+	.candy-img {
+		height: var(--cell);
+		width: var(--cell);
+		vertical-align: middle;
+	}
+
+	table {
+		width: calc(var(--board-size) + var(--cell));
+	}
+
+	th {
+	  height: var(--cell-outer);
+	  width: var(--cell-outer);
+	}
+
+	td {
+	  height: var(--cell);
+	  width: var(--cell);
+	}
+
 }
