@@ -11,6 +11,34 @@
 	--duration-fade: .4s;
 }
 
+@keyframes move-left {
+	to {
+		transform: translateX(-100%);
+	}
+}
+@keyframes move-right {
+	to {
+		transform: translateX(100%);
+	}
+}
+@keyframes move-up {
+	to {
+		transform: translateY(-100%);
+	}
+}
+@keyframes move-down {
+	to {
+		transform: translateY(100%);
+	}
+}
+
+@keyframes disappear {
+	to {
+		100% opacity: 0;
+	}
+}
+
+
 * {
     box-sizing: border-box;
 }

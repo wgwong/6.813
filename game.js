@@ -33,6 +33,30 @@ var getPositionFromInput = function(location) {
 	return position;
 }
 
+var calculateDirection = function(fromCol, fromRow, toCol, toRow) {
+	if (fromCol == toCol) { //vertical
+		if (fromRow < toRow) {
+			return "down";
+		} else {
+			return "up";
+		}
+	} else { //horizontal
+		if (fromCol < toCol) {
+			return "right";
+		} else {
+			return "left";
+		}
+	}
+}
+
+var calculateSpeed = function(fromCol, fromRow, toCol, toRow) {
+	if (fromCol == toCol) { //vertical
+		return Math.abs(fromRow-toRow);
+	} else { //horizontal
+		return Math.abs(fromCol-toCol);
+	}
+}
+
 var disableAllArrowButtons = function() {
 	$("#leftArrowButton").prop("disabled", true);
 	$("#rightArrowButton").prop("disabled", true);
@@ -252,6 +276,7 @@ Util.events(board, {
 		var color = e.detail.candy.color;
 		var row = e.detail.candy.row;
 		var col = e.detail.candy.col;
+		console.log("adding candy. e.detail: ", e.detail); 
 		$("#cell-"+translatePositionToLetter(col+1)+"-"+(row+1)).empty().append("<img src='graphics/" + color + "-candy.png' class='candy-img'>");
 		validateCrushable();
 	},
@@ -261,8 +286,23 @@ Util.events(board, {
 		var color = e.detail.candy.color;
 		var toCol = e.detail.toCol;
 		var toRow = e.detail.toRow;
-		$("#cell-"+translatePositionToLetter(toCol+1)+"-"+(toRow+1)).empty().append("<img src='graphics/" + color + "-candy.png' class='candy-img'>");
-		validateCrushable();
+		var fromCol = e.detail.fromCol;
+		var fromRow = e.detail.fromRow;
+		console.log("moving candy. e.detail: ", e.detail);
+		var direction = calculateDirection(fromCol, fromRow, toCol, toRow);
+		var speed = calculateSpeed(fromCol, fromRow, toCol, toRow);
+		var oldCandyId = "#cell-"+translatePositionToLetter(fromCol+1)+"-"+(fromRow+1);
+		var newCandyId = "#cell-"+translatePositionToLetter(toCol+1)+"-"+(toRow+1);
+		var durationMoveCode = window.getComputedStyle(document.body).getPropertyValue('--duration-move');
+
+		$(oldCandyId).css("animation", (parseFloat(durationMoveCode) * speed) + " move-" + direction + " 1");
+
+		var replaceCandy = function() {
+			$(newCandyId).empty().append("<img src='graphics/" + color + "-candy.png' class='candy-img'>");
+			validateCrushable();
+		}
+
+		Util.afterAnimation(Util.one(oldCandyId), "move-" + direction).then(replaceCandy(), replaceCandy());
 	},
 
 	// remove a candy from the board
@@ -270,7 +310,12 @@ Util.events(board, {
 		var color = e.detail.candy.color;
 		var row = e.detail.fromRow;
 		var col = e.detail.fromCol;
-		$("#cell-"+translatePositionToLetter(col+1)+"-"+(row+1)).empty();
+		var durationFadeCode = window.getComputedStyle(document.body).getPropertyValue('--duration-fade');
+		var candyId = "#cell-"+translatePositionToLetter(col+1)+"-"+(row+1);
+
+		$(candyId).css("animation", durationFadeCode + " disappear 1");
+
+		Util.afterAnimation(Util.one(candyId), "disappear").then($(candyId).empty(), $(candyId).empty());
 		//shouldn't need to call validateCrushable() here since add will be called anyways to repopulate the board
 	},
 
