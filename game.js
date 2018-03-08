@@ -7,7 +7,7 @@ const DEFAULT_BOARD_SIZE = 8;
 const size = Math.min(10, Math.max(3, Util.getURLParam("size") || DEFAULT_BOARD_SIZE));
 const letterMapping = {1: 'a', 2: 'b', 3: 'c', 4: 'd', 5: 'e', 6: 'f', 7: 'g', 8: 'h', 9: 'i', 10: 'j'}
 const positionMapping = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7, 'h': 8, 'i': 9, 'j': 10}
-//const colorMapping = {"red": ,"yellow": ,"green": ,"orange": ,"blue": ,"purple": } //debug
+const letterList = ['a', 'b', 'c', 'd', 'e', 'f', 'e', 'g', 'h', 'i', 'j'];
 
 // Holds DOM elements that don’t change, to avoid repeatedly querying the DOM
 var dom = {};
@@ -77,7 +77,8 @@ var validateInput = function() {
 		$("#candyLocation").addClass("background-pink"); //give invalid background color to indicate invalid location input
 		return;
 	}
-	if (!"abcdefgh".includes(candyLocation[0].toLowerCase())) {
+	var letterSet = new Set(letterList.slice(0, size));
+	if (!letterSet.has(candyLocation[0].toLowerCase())) {
 		disableAllArrowButtons();
 		$("#candyLocation").addClass("background-pink"); //give invalid background color to indicate invalid location input
 		return;
@@ -116,11 +117,13 @@ var validateCrushable = function() {
 	var numCrushes = rules.getCandyCrushes().length;
 	if (numCrushes == 0) {
 		$("#crushButton").prop("disabled", true);
+		$("#showHintButton").prop("disabled", false);
 		$("#candyLocation").prop("disabled", false);
 		$("#candyLocation").addClass("background-pink");
 	} else {
 		disableAllArrowButtons();
 		$("#crushButton").prop("disabled", false);
+		$("#showHintButton").prop("disabled", true);
 		$("#candyLocation").prop("disabled", true);
 		$("#candyLocation").removeClass("background-pink");
 	}
