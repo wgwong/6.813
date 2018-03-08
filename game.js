@@ -1,3 +1,7 @@
+//TODO use only jquery OR Util (be consistent)
+//TODO for game.css, make classes for things that I'm modifying by identifying by ID
+//	also cleanup my media queries (esp the small one)
+
 // Hand it in this way: for simpler testing, always use the same seed.
 Math.seedrandom(0);
 

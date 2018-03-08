@@ -229,6 +229,7 @@ td {
 	text-align: center;
 	margin-top: 10px;
 	width: 120px;
+	margin: auto;
 }
 
 .arrow-button-image {
@@ -288,7 +289,7 @@ input[type=text] {
 	}
 
 	.board {
-		--board-size: 80vw;
+		--board-size: 70vw;
 		--grid-gap: 1px;
 		--cell-outer: calc(var(--board-size) / var(--size));
 		--cell: calc(var(--cell-outer) - var(--grid-gap));
@@ -300,13 +301,14 @@ input[type=text] {
 
 	.button-grid-container-three {
 		width: 90vw;
+		grid-column-gap: 2vw;
 	}
 	.button-grid-container-one {
 		width: 90vw;
 	}
 
 	.button-grid-item {
-		width: 25vw;
+		width: 28vw;
 	}
 
 	.candy-img {
