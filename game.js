@@ -8,6 +8,8 @@ const size = Math.min(10, Math.max(3, Util.getURLParam("size") || DEFAULT_BOARD_
 const letterMapping = {1: 'a', 2: 'b', 3: 'c', 4: 'd', 5: 'e', 6: 'f', 7: 'g', 8: 'h', 9: 'i', 10: 'j'}
 const positionMapping = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7, 'h': 8, 'i': 9, 'j': 10}
 const letterList = ['a', 'b', 'c', 'd', 'e', 'f', 'e', 'g', 'h', 'i', 'j'];
+const millisecondsPerSecond = 1000; //conversion unit
+const animationSpeed = 500; //in ms
 
 // Holds DOM elements that don’t change, to avoid repeatedly querying the DOM
 var dom = {};
@@ -50,6 +52,9 @@ var calculateDirection = function(fromCol, fromRow, toCol, toRow) {
 }
 
 var calculateSpeed = function(fromCol, fromRow, toCol, toRow) {
+	if (fromCol == null || fromRow == null || toCol == null || toRow == null) {
+		return 1;
+	}
 	if (fromCol == toCol) { //vertical
 		return Math.abs(fromRow-toRow);
 	} else { //horizontal
@@ -173,6 +178,7 @@ var startNewGame = function() {
 	$("#score-div").text("0"); //start game score at 0 no matter what
 	$("#candyLocation").addClass("background-pink"); //"invalid input" at start, so color background appropriately
 	$("#candyLocation").val(''); //clear input box on page load and new game
+	$("#candyLocation").prop("disabled", false); //enable candyLocation input just incase we press new game button while inputbox was disabled during long animation
 	$("#candyLocation").focus(); //focus should be on input box on page load and new game
 	var colorCode = window.getComputedStyle(document.body).getPropertyValue('--color-light-gray');
 	$("#score-label").css("background-color", colorCode); //reset score background color to gray (default)
@@ -180,6 +186,9 @@ var startNewGame = function() {
 	if (!hasValidMove()) {
 		$("#showHintButton").prop("disabled", true);
 	}
+	//disable all input buttons just in case we press new game button while they were active
+	disableAllArrowButtons();
+	validateCrushable();
 }
 
 // Attaching events on document because then we can do it without waiting for
@@ -234,8 +243,6 @@ Util.events(document, {
 				var children = $(candyId).children();
 
 				children.addClass("pulse");
-				console.log("child: ", children);
-				//$(candyId).addClass("pulse");
 			}
 
 		});
@@ -308,11 +315,15 @@ Util.events(document, {
 			$("#crushButton").prop("disabled", true);
 
 			rules.removeCrushes(rules.getCandyCrushes());
-			setTimeout(() => {
+
+			var afterAnimationFunction = function() {
 				rules.moveCandiesDown();
 				$("#candyLocation").focus();
 				$("#candyLocation").val('');
-			}, 500);
+			};
+
+			var durationFadeCode = window.getComputedStyle(document.body).getPropertyValue('--duration-fade');
+			Util.delay((parseFloat(durationFadeCode)*millisecondsPerSecond)).then(afterAnimationFunction, afterAnimationFunction);
 		});
 
 		//disable focus ring on button press
@@ -345,20 +356,30 @@ Util.events(board, {
 		var toRow = e.detail.toRow;
 		var fromCol = e.detail.fromCol;
 		var fromRow = e.detail.fromRow;
-		console.log("adding candy. e.detail: ", e.detail); 
-		var direction = calculateDirection(fromCol, fromRow, toCol, toRow);
-		var speed = calculateSpeed(fromCol, fromRow, toCol, toRow);
-		var durationMoveCode = window.getComputedStyle(document.body).getPropertyValue('--duration-move');
 
 		var candyId = "#cell-"+translatePositionToLetter(toCol+1)+"-"+(toRow+1);
-		$(candyId).css("animation", (parseFloat(durationMoveCode) * speed) + " move-" + direction + " 1");
+		$(candyId).empty().append("<img src='graphics/" + color + "-candy.png' class='candy-img'>");
 
-		var populateCandy = function() {
-			$(candyId).empty().append("<img src='graphics/" + color + "-candy.png' class='candy-img'>");
-			validateCrushable();
+		if (fromCol != null && fromRow != null) { //only animate add if not populating board at start/new game
+			var direction = calculateDirection(fromCol, fromRow, toCol, toRow);
+			var speedScale = calculateSpeed(fromCol, fromRow, toCol, toRow);
+			var durationMoveCode = window.getComputedStyle(document.body).getPropertyValue('--duration-move');
+			var speed = Math.round(parseFloat(durationMoveCode) * speedScale * millisecondsPerSecond);
+
+			var imgChild = Util.one(candyId).querySelector("img");
+
+			var heightToDrop = 100 * (toRow - fromRow);
+
+			var keyframes = {
+				transform: ['translateY(-' + heightToDrop + '%)', 'translateY(0%)']
+			}
+
+			var afterAnimationFunction = function() {
+				validateCrushable();
+			};
+			var animation = imgChild.animate(keyframes, speed);
+			animation.onfinish = afterAnimationFunction;
 		}
-
-		Util.afterAnimation(Util.one(candyId), "move-" + direction).then(populateCandy(), populateCandy());
 	},
 
 	// move a candy from location 1 to location 2
@@ -368,21 +389,47 @@ Util.events(board, {
 		var toRow = e.detail.toRow;
 		var fromCol = e.detail.fromCol;
 		var fromRow = e.detail.fromRow;
-		console.log("moving candy. e.detail: ", e.detail);
 		var direction = calculateDirection(fromCol, fromRow, toCol, toRow);
-		var speed = calculateSpeed(fromCol, fromRow, toCol, toRow);
-		var oldCandyId = "#cell-"+translatePositionToLetter(fromCol+1)+"-"+(fromRow+1);
-		var newCandyId = "#cell-"+translatePositionToLetter(toCol+1)+"-"+(toRow+1);
+		var speedScale = calculateSpeed(fromCol, fromRow, toCol, toRow);
 		var durationMoveCode = window.getComputedStyle(document.body).getPropertyValue('--duration-move');
+		var speed = Math.round(parseFloat(durationMoveCode) * speedScale * millisecondsPerSecond);
 
-		$(oldCandyId).css("animation", (parseFloat(durationMoveCode) * speed) + " move-" + direction + " 1");
+		var candyId = "#cell-"+translatePositionToLetter(toCol+1)+"-"+(toRow+1);
+		$(candyId).empty().append("<img src='graphics/" + color + "-candy.png' class='candy-img'>");
+	
+		var imgChild = Util.one(candyId).querySelector("img");
 
-		var replaceCandy = function() {
-			$(newCandyId).empty().append("<img src='graphics/" + color + "-candy.png' class='candy-img'>");
-			validateCrushable();
+		var keyframes = {
+			transform: []
 		}
 
-		Util.afterAnimation(Util.one(oldCandyId), "move-" + direction).then(replaceCandy(), replaceCandy());
+		if (direction == "up") {
+			var distance = 100 * Math.abs(toRow - fromRow);
+			keyframes["transform"].push('translateY(' + distance + '%)');
+			keyframes["transform"].push('translateY(0%)');
+		}
+		if (direction == "down") {
+			var distance = 100 * Math.abs(toRow - fromRow);
+			keyframes["transform"].push('translateY(-' + distance + '%)');
+			keyframes["transform"].push('translateY(0%)');
+		}
+		if (direction == "left") {
+			var distance = 100 * Math.abs(toCol - fromCol);
+			keyframes["transform"].push('translateX(' + distance + '%)');
+			keyframes["transform"].push('translateX(0%)');
+		}
+		if (direction == "right") {
+			var distance = 100 * Math.abs(toCol - fromCol);
+			keyframes["transform"].push('translateX(-' + distance + '%)');
+			keyframes["transform"].push('translateX(0%)');
+		}
+
+		var afterAnimationFunction = function() {
+			validateCrushable();
+		};
+		var animation = imgChild.animate(keyframes, speed);
+		animation.onfinish = afterAnimationFunction;
+		
 	},
 
 	// remove a candy from the board
@@ -393,9 +440,17 @@ Util.events(board, {
 		var durationFadeCode = window.getComputedStyle(document.body).getPropertyValue('--duration-fade');
 		var candyId = "#cell-"+translatePositionToLetter(col+1)+"-"+(row+1);
 
-		$(candyId).css("animation", durationFadeCode + " disappear 1");
+		var imgChild = Util.one(candyId).querySelector("img");
+		var styles = {
+			animation: "disappear" + durationFadeCode + " 1"
+		};
+		Util.css(imgChild, styles);
 
-		Util.afterAnimation(Util.one(candyId), "disappear").then($(candyId).empty(), $(candyId).empty());
+		var afterAnimationFunction = function() {
+			$(candyId).empty();
+		};
+
+		Util.afterAnimation(Util.one(candyId).querySelector("img"), "disappear").then(afterAnimationFunction, afterAnimationFunction);
 		//shouldn't need to call validateCrushable() here since add will be called anyways to repopulate the board
 	},
 
