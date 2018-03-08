@@ -175,7 +175,24 @@ Util.events(document, {
 
 		//add event listener for show hint button; add css animation to cells that can be valid moves
 		Util.one("#showHintButton").addEventListener("click", function() {
-			
+			var hint = rules.getRandomValidMove();
+			candiesToCrush = rules.getCandiesToCrushGivenMove(hint.candy, hint.direction);
+
+			//remove any previous hints
+			$(".pulse").removeClass("pulse");
+
+			for (var i in candiesToCrush) {
+				var candyToCrush = candiesToCrush[i];
+				var col = candyToCrush.col;
+				var row = candyToCrush.row;
+				var candyId = "#cell-"+translatePositionToLetter(col+1)+"-"+(row+1);
+				var children = $(candyId).children();
+
+				children.addClass("pulse");
+				console.log("child: ", children);
+				//$(candyId).addClass("pulse");
+			}
+
 		});
 
 		//add event listeners for each of the arrow/move buttons
@@ -189,6 +206,7 @@ Util.events(document, {
 				board.flipCandies(position, board.getCandyAt(row, col-1));
 				$("#candyLocation").val('');
 			}
+			$(".pulse").removeClass("pulse"); //remove any hints
 			disableAllArrowButtons();
 			$("#candyLocation").focus();
 		});
@@ -203,6 +221,7 @@ Util.events(document, {
 				board.flipCandies(position, board.getCandyAt(row, col+1));
 				$("#candyLocation").val('');
 			}
+			$(".pulse").removeClass("pulse"); //remove any hints
 			disableAllArrowButtons();
 			$("#candyLocation").focus();
 		});
@@ -217,6 +236,7 @@ Util.events(document, {
 				board.flipCandies(position, board.getCandyAt(row-1, col));
 				$("#candyLocation").val('');
 			}
+			$(".pulse").removeClass("pulse"); //remove any hints
 			disableAllArrowButtons();
 			$("#candyLocation").focus();
 		});
@@ -231,12 +251,14 @@ Util.events(document, {
 				board.flipCandies(position, board.getCandyAt(row+1, col));
 				$("#candyLocation").val('');
 			}
+			$(".pulse").removeClass("pulse"); //remove any hints
 			disableAllArrowButtons();
 			$("#candyLocation").focus();
 		});
 
 		//add event listener for crushbutton; will crush and repopulate crushables
 		Util.one("#crushButton").addEventListener("click", function() {
+			$(".pulse").removeClass("pulse"); //remove any hints
 			disableAllArrowButtons();
 			$("#crushButton").prop("disabled", true);
 
@@ -274,11 +296,24 @@ Util.events(board, {
 	// add a candy to the board
 	"add": function(e) {
 		var color = e.detail.candy.color;
-		var row = e.detail.candy.row;
-		var col = e.detail.candy.col;
+		var toCol = e.detail.toCol;
+		var toRow = e.detail.toRow;
+		var fromCol = e.detail.fromCol;
+		var fromRow = e.detail.fromRow;
 		console.log("adding candy. e.detail: ", e.detail); 
-		$("#cell-"+translatePositionToLetter(col+1)+"-"+(row+1)).empty().append("<img src='graphics/" + color + "-candy.png' class='candy-img'>");
-		validateCrushable();
+		var direction = calculateDirection(fromCol, fromRow, toCol, toRow);
+		var speed = calculateSpeed(fromCol, fromRow, toCol, toRow);
+		var durationMoveCode = window.getComputedStyle(document.body).getPropertyValue('--duration-move');
+
+		var candyId = "#cell-"+translatePositionToLetter(toCol+1)+"-"+(toRow+1);
+		$(candyId).css("animation", (parseFloat(durationMoveCode) * speed) + " move-" + direction + " 1");
+
+		var populateCandy = function() {
+			$(candyId).empty().append("<img src='graphics/" + color + "-candy.png' class='candy-img'>");
+			validateCrushable();
+		}
+
+		Util.afterAnimation(Util.one(candyId), "move-" + direction).then(populateCandy(), populateCandy());
 	},
 
 	// move a candy from location 1 to location 2
