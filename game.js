@@ -133,6 +133,7 @@ var validateCrushable = function() {
 		}
 		$("#candyLocation").prop("disabled", false);
 		$("#candyLocation").addClass("background-pink");
+		$("#candyLocation").focus();
 	} else {
 		disableAllArrowButtons();
 		$("#crushButton").prop("disabled", false);
@@ -255,8 +256,10 @@ Util.events(document, {
 			var row = parseInt(location[1])-1; //assuming correct format
 
 			if (rules.isMoveTypeValid(position, "left") > 0) {
-				board.flipCandies(position, board.getCandyAt(row, col-1));
+				$("#showHintButton").prop("disabled", true);
 				$("#candyLocation").val('');
+				$("#candyLocation").prop("disabled", true);
+				board.flipCandies(position, board.getCandyAt(row, col-1));
 			}
 			$(".pulse").removeClass("pulse"); //remove any hints
 			disableAllArrowButtons();
@@ -270,8 +273,10 @@ Util.events(document, {
 			var row = parseInt(location[1])-1; //assuming correct format
 
 			if (rules.isMoveTypeValid(position, "right") > 0) {
-				board.flipCandies(position, board.getCandyAt(row, col+1));
+				$("#showHintButton").prop("disabled", true);
 				$("#candyLocation").val('');
+				$("#candyLocation").prop("disabled", true);
+				board.flipCandies(position, board.getCandyAt(row, col+1));
 			}
 			$(".pulse").removeClass("pulse"); //remove any hints
 			disableAllArrowButtons();
@@ -285,8 +290,10 @@ Util.events(document, {
 			var row = parseInt(location[1])-1; //assuming correct format
 
 			if (rules.isMoveTypeValid(position, "up") > 0) {
-				board.flipCandies(position, board.getCandyAt(row-1, col));
+				$("#showHintButton").prop("disabled", true);
 				$("#candyLocation").val('');
+				$("#candyLocation").prop("disabled", true);
+				board.flipCandies(position, board.getCandyAt(row-1, col));
 			}
 			$(".pulse").removeClass("pulse"); //remove any hints
 			disableAllArrowButtons();
@@ -300,8 +307,10 @@ Util.events(document, {
 			var row = parseInt(location[1])-1; //assuming correct format
 
 			if (rules.isMoveTypeValid(position, "down") > 0) {
-				board.flipCandies(position, board.getCandyAt(row+1, col));
+				$("#showHintButton").prop("disabled", true);
 				$("#candyLocation").val('');
+				$("#candyLocation").prop("disabled", true);
+				board.flipCandies(position, board.getCandyAt(row+1, col));
 			}
 			$(".pulse").removeClass("pulse"); //remove any hints
 			disableAllArrowButtons();
@@ -318,8 +327,6 @@ Util.events(document, {
 
 			var afterAnimationFunction = function() {
 				rules.moveCandiesDown();
-				$("#candyLocation").focus();
-				$("#candyLocation").val('');
 			};
 
 			var durationFadeCode = window.getComputedStyle(document.body).getPropertyValue('--duration-fade');
@@ -327,6 +334,7 @@ Util.events(document, {
 		});
 
 		//disable focus ring on button press
+		//TODO is this really necessary? seems to be imcompatible w/ inaccessability issues (see pset2 issues)
 		var buttonList = Util.all("button");
 		for (var i in buttonList){
 			var button = buttonList[i];
