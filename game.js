@@ -144,33 +144,11 @@ var validateCrushable = function() {
 
 //check whether the board still has valid moves left
 var hasValidMove = function () {
-	var directions = ["up", "down", "left", "right"];
-
-	// For each cell in the board, check to see if moving it in
-	// any of the four directions would result in a crush
-	// if so, add it to the appropriate list (validMoves_threeCrush for
-	// crushes of size 3, validMoves_moreThanThreeCrush for crushes
-	// larger than 3)
-	for (var row = 0; row < board.getSize(); row++) {
-		for (var col = 0; col < board.getSize(); col++) {
-			var fromCandy = board.getCandyAt(row, col);
-
-			if (!fromCandy) {
-				continue;
-			}
-
-			for (var i = 0; i < 4; i++) {
-				var direction = directions[i];
-				var numCandiesCrushed = rules.numberCandiesCrushedByMove(fromCandy, direction); //TODO are we allowed to call this private helper function?, alternative would be to keep a global variable of the next hint in queue and if null, disable showhint button
-
-				if (numCandiesCrushed >= 3) {
-					return true; //at least 1 valid move exists, so return true
-				}
-			}
-		}
+	if (rules.getRandomValidMove() == null) {
+		return false;
 	}
-	//didn't find any valid moves, so return false
-	return false;
+
+	return true;
 }
 
 var startNewGame = function() {
@@ -233,7 +211,7 @@ Util.events(document, {
 		Util.one("#showHintButton").addEventListener("click", function() {
 			var hint = rules.getRandomValidMove();
 			console.log("hint: ", hint);
-			candiesToCrush = rules.getCandiesToCrushGivenMove(hint.candy, hint.direction); //TODO am I allowed to call this private helper function?
+			candiesToCrush = rules.getCandiesToCrushGivenMove(hint.candy, hint.direction); //calling this private function because there's no other way to get the other crushable candies without manually checking the entire board by hand
 
 			//remove any previous hints
 			$(".pulse").removeClass("pulse");
