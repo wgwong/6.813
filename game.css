@@ -106,7 +106,6 @@ body {
 }
 
 .flex-subcontainer {
-	width: 100%;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
@@ -190,7 +189,6 @@ main {
 }
 
 table {
-	max-width: calc(var(--board-size));
 	width: calc(var(--board-size) + var(--cell));
 	border-spacing: 0px;
 	border-collapse: collapse;
@@ -288,4 +286,12 @@ input[type=text] {
 	#showHintButton {
 		width: 80%;
 	}
+	/* TODO fix buggy
+	.board {
+		--board-size: 80%;
+		--grid-gap: 1px;
+		--cell-outer: calc(var(--board-size) / var(--size));
+		--cell: calc(var(--cell-outer) - var(--grid-gap));
+	}
+	*/
 }
