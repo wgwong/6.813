@@ -94,22 +94,28 @@ var validateInput = function() {
 		$("#candyLocation").addClass("background-pink"); //give invalid background color to indicate invalid location input
 		return;
 	}
-	//if we've made it this far, then the input must be valid right?
-	$("#candyLocation").removeClass("background-pink"); //remove invalid background color
-
 	var position = getPositionFromInput(candyLocation);
 
-	if (rules.isMoveTypeValid(position, "left") > 0) {
+	var leftValid = rules.isMoveTypeValid(position, "left") > 0;
+	var rightValid = rules.isMoveTypeValid(position, "right") > 0;
+	var upValid = rules.isMoveTypeValid(position, "up") > 0;
+	var downValid = rules.isMoveTypeValid(position, "down") > 0;
+
+	if (leftValid) {
 		$("#leftArrowButton").prop("disabled", false);
 	}
-	if (rules.isMoveTypeValid(position, "right") > 0) {
+	if (rightValid) {
 		$("#rightArrowButton").prop("disabled", false);
 	}
-	if (rules.isMoveTypeValid(position, "up") > 0) {
+	if (upValid) {
 		$("#upArrowButton").prop("disabled", false);
 	}
-	if (rules.isMoveTypeValid(position, "down") > 0) {
+	if (downValid) {
 		$("#downArrowButton").prop("disabled", false);
+	}
+	
+	if (leftValid || rightValid || upValid || downValid) {
+		$("#candyLocation").removeClass("background-pink"); //remove invalid background color only if it's a valid move
 	}
 }
 
@@ -117,7 +123,9 @@ var validateCrushable = function() {
 	var numCrushes = rules.getCandyCrushes().length;
 	if (numCrushes == 0) {
 		$("#crushButton").prop("disabled", true);
-		$("#showHintButton").prop("disabled", false);
+		if (hasValidMove()) {
+			$("#showHintButton").prop("disabled", false);
+		}
 		$("#candyLocation").prop("disabled", false);
 		$("#candyLocation").addClass("background-pink");
 	} else {
@@ -129,6 +137,37 @@ var validateCrushable = function() {
 	}
 }
 
+//check whether the board still has valid moves left
+var hasValidMove = function () {
+	var directions = ["up", "down", "left", "right"];
+
+	// For each cell in the board, check to see if moving it in
+	// any of the four directions would result in a crush
+	// if so, add it to the appropriate list (validMoves_threeCrush for
+	// crushes of size 3, validMoves_moreThanThreeCrush for crushes
+	// larger than 3)
+	for (var row = 0; row < board.getSize(); row++) {
+		for (var col = 0; col < board.getSize(); col++) {
+			var fromCandy = board.getCandyAt(row, col);
+
+			if (!fromCandy) {
+				continue;
+			}
+
+			for (var i = 0; i < 4; i++) {
+				var direction = directions[i];
+				var numCandiesCrushed = rules.numberCandiesCrushedByMove(fromCandy, direction); //TODO are we allowed to call this private helper function?, alternative would be to keep a global variable of the next hint in queue and if null, disable showhint button
+
+				if (numCandiesCrushed >= 3) {
+					return true; //at least 1 valid move exists, so return true
+				}
+			}
+		}
+	}
+	//didn't find any valid moves, so return false
+	return false;
+}
+
 var startNewGame = function() {
 	rules.prepareNewGame(); //populate game board at start
 	$("#score-div").text("0"); //start game score at 0 no matter what
@@ -138,6 +177,9 @@ var startNewGame = function() {
 	var colorCode = window.getComputedStyle(document.body).getPropertyValue('--color-light-gray');
 	$("#score-label").css("background-color", colorCode); //reset score background color to gray (default)
 	$("#score-label").css("color", "black");
+	if (!hasValidMove()) {
+		$("#showHintButton").prop("disabled", true);
+	}
 }
 
 // Attaching events on document because then we can do it without waiting for
@@ -179,7 +221,7 @@ Util.events(document, {
 		//add event listener for show hint button; add css animation to cells that can be valid moves
 		Util.one("#showHintButton").addEventListener("click", function() {
 			var hint = rules.getRandomValidMove();
-			candiesToCrush = rules.getCandiesToCrushGivenMove(hint.candy, hint.direction);
+			candiesToCrush = rules.getCandiesToCrushGivenMove(hint.candy, hint.direction); //TODO am I allowed to call this private helper function?
 
 			//remove any previous hints
 			$(".pulse").removeClass("pulse");
