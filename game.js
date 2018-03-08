@@ -220,7 +220,9 @@ Util.events(document, {
 		}
 
 		startNewGame(); //start new game
-		
+
+		Util.one("#cellBoard").style.setProperty("--size", size);
+
 		// Add events
 		//add event listener for new game button; starts new game visually too
 		Util.one("#newGameButton").addEventListener("click", function() {
@@ -230,6 +232,7 @@ Util.events(document, {
 		//add event listener for show hint button; add css animation to cells that can be valid moves
 		Util.one("#showHintButton").addEventListener("click", function() {
 			var hint = rules.getRandomValidMove();
+			console.log("hint: ", hint);
 			candiesToCrush = rules.getCandiesToCrushGivenMove(hint.candy, hint.direction); //TODO am I allowed to call this private helper function?
 
 			//remove any previous hints
@@ -331,16 +334,6 @@ Util.events(document, {
 			var durationFadeCode = window.getComputedStyle(document.body).getPropertyValue('--duration-fade');
 			Util.delay((parseFloat(durationFadeCode)*millisecondsPerSecond)).then(afterAnimationFunction, afterAnimationFunction);
 		});
-
-		//disable focus ring on button press
-		//TODO is this really necessary? seems to be imcompatible w/ inaccessability issues (see pset2 issues)
-		var buttonList = Util.all("button");
-		for (var i in buttonList){
-			var button = buttonList[i];
-			button.addEventListener("mouseup", function() {
-				this.blur();
-			});
-		}
 	},
 
 	// Keyboard events arrive here
