@@ -36,6 +36,7 @@ class Rules {
 
 			this.removeCrushes(crushable);
 		}
+		board.resetScore();
 
 		this.scoring = true;
 	}

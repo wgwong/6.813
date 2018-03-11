@@ -11,7 +11,7 @@ const DEFAULT_BOARD_SIZE = 8;
 const size = Math.min(10, Math.max(3, Util.getURLParam("size") || DEFAULT_BOARD_SIZE));
 const letterMapping = {1: 'a', 2: 'b', 3: 'c', 4: 'd', 5: 'e', 6: 'f', 7: 'g', 8: 'h', 9: 'i', 10: 'j'}
 const positionMapping = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7, 'h': 8, 'i': 9, 'j': 10}
-const letterList = ['a', 'b', 'c', 'd', 'e', 'f', 'e', 'g', 'h', 'i', 'j'];
+const letterList = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
 const millisecondsPerSecond = 1000; //conversion unit
 
 // Holds DOM elements that don’t change, to avoid repeatedly querying the DOM
@@ -439,15 +439,18 @@ Util.events(board, {
 	// update the score
 	"scoreUpdate": function(e) {
 		//get the appropriate color scheme
-		var color = e.detail.candy.color;
-		var colorCode = window.getComputedStyle(document.body).getPropertyValue('--color-'+color);
-
 		$("#score-div").text(e.detail.score);
-		$("#score-label").css("background-color", colorCode);
-		if (color == "purple" || color == "blue" || color == "green" || color == "red") {
-			$("#score-label").css("color", "white");
-		} else {
-			$("#score-label").css("color", "black");
+
+		if (e.detail.candy != null) {
+			var color = e.detail.candy.color;
+			var colorCode = window.getComputedStyle(document.body).getPropertyValue('--color-'+color);
+			
+			$("#score-label").css("background-color", colorCode);
+			if (color == "purple" || color == "blue" || color == "green" || color == "red") {
+				$("#score-label").css("color", "white");
+			} else {
+				$("#score-label").css("color", "black");
+			}
 		}
 	},
 });
