@@ -36,15 +36,17 @@ PS2 - CandyCrush UI
 
 <body class="flex-container">
 		<header class="flex-subcontainer">
-			<label id="title-text" class="default-cursor no-select flex-subitem">Candy<br>Crush!</label>
-			<div id="score-label" class="default-cursor no-select flex-subitem"><div id="score-div" class="bigfont">0</div><div>points</div></div>
-			<div class="flex-subsubcontainer flex-subitem">
-				<button id="newGameButton" class="background-blue">New Game</button>
-				<button id="showHintButton" class="background-purple">Show Hint</button>
+			<label class="title-text default-cursor no-select flex-subitem">Candy<br>Crush!</label>
+			<div class="left-column flex-subcontainer">
+				<div id="score-label" class="text-label default-cursor no-select flex-subitem bottom-margin"><div id="score-div" class="bigfont horizontal-padding">0</div><div class="bottom-padding horizontal-padding">points</div></div>
+				<div class="flex-subsubcontainer flex-subitem left-column-buttons">
+					<button id="newGameButton" class="background-blue horizontal-padding bottom-margin">New Game</button>
+					<button id="showHintButton" class="background-purple horizontal-padding bottom-margin">Show Hint</button>
+				</div>
 			</div>
 		</header>
 
-		<div class="flex-item no-select">
+		<div class="flex-item no-select bottom-margin">
 			<main>
 				<table id="cellBoard" class="board table-font"></table>
 			</main>
@@ -55,15 +57,15 @@ PS2 - CandyCrush UI
 				using icons from http://demo.amitjakhu.com/dripicons/ for the arrow icons
 			-->
 			<div id="controls">
-				<div class="button-grid-container-one">
+				<div class="button-grid-container-one bottom-margin">
 					<div class="button-grid-item"><button id="upArrowButton" class="background-green" disabled><img src="graphics/dripicons/SVG/arrow-thin-up.svg" class="arrow-button-image"/></button></div>
 				</div>
-				<div class="button-grid-container-three">
+				<div class="button-grid-container-three bottom-margin">
 					<div class="button-grid-item"><button id="leftArrowButton" class="background-green" disabled><img src="graphics/dripicons/SVG/arrow-thin-left.svg" class="arrow-button-image"/></button></div>
 					<div class="button-grid-item"><input id="candyLocation" type="text" oninput="validateInput()"></div>
 					<div class="button-grid-item"><button id="rightArrowButton" class="background-green" disabled><img src="graphics/dripicons/SVG/arrow-thin-right.svg" class="arrow-button-image"/></button></div>
 				</div>
-				<div class="button-grid-container-one">
+				<div class="button-grid-container-one bottom-margin">
 					<div class="button-grid-item"><button id="downArrowButton" class="background-green" disabled><img src="graphics/dripicons/SVG/arrow-thin-down.svg" class="arrow-button-image"/></button></div>
 				</div>
 				<div class="button-grid-container-one">

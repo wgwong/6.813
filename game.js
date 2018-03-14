@@ -28,6 +28,7 @@ var translatePositionToLetter = function(pos) {
 	return letterMapping[pos];
 }
 var translateLetterToPosition = function(letter) {
+	letter = letter.toLowerCase();
 	return positionMapping[letter];
 }
 

@@ -57,7 +57,7 @@ body {
 }
 
 .bigfont {
-	font-size: 60px;
+	font-size: 56px;
 }
 
 .background-blue {
@@ -112,11 +112,16 @@ body {
 	align-items: center;
 }
 
+.flex-subitem {
+	width: 100%;
+}
+
 .flex-subsubcontainer {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
+	flex-shrink: 0;
 }
 
 
@@ -125,7 +130,7 @@ header {
 	text-align: center;
 }
 
-#title-text {
+.title-text {
 	color: var(--color-blue);
 	font-size: 48px;
 	text-align: center;
@@ -133,23 +138,34 @@ header {
 	margin-bottom: 10px;
 }
 
-#score-label {
-	font-size: 32px;
+.text-label {
+	font-size: 28px;
 	text-align: center;
 	font-weight: bold;
-	margin-bottom: 10px;
 	background-color: lightgray; /* default */
 	border-radius: 6px;
 }
 
+.horizontal-padding {
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.bottom-padding {
+	padding-bottom: 10px;
+}
+
+.bottom-margin {
+	margin-bottom: 10px !important;
+}
+
 button {
-	padding: 10px 0px;
+	padding: 15px 0px;
 	color: white;
 	border-radius: 6px;
 	border: 0px;
 	width: 100%;
 	font-size: 18px;
-	margin-top: 10px;
 }
 
 button:hover {
@@ -237,7 +253,6 @@ td {
 }
 
 input[type=text] {
-	margin-top: 10px;
 	height: 90%;
 	padding-bottom: 10px;
 	width: 100%;
@@ -259,11 +274,8 @@ input[type=text] {
 	.flex-subitem {
 		margin-right: 10px;
 	}
-	#newGameButton {
-		width: 120px;
-	}
-	#showHintButton {
-		width: 120px;
+	.left-column-buttons {
+		width: 200px;
 	}
 }
 
@@ -278,21 +290,17 @@ input[type=text] {
 		width: 100%;
 		flex-direction: column;
 	}
-	#score-label {
-		width: 90vw;
+
+	.left-column {
+		width: 80vw;
 	}
-	#newGameButton {
-		width: 90vw;
-	}
-	#showHintButton {
-		width: 90vw;
+
+	.title-text {
+		font-size: 15vw;
 	}
 
 	.board {
 		--board-size: 70vw;
-		--grid-gap: 1px;
-		--cell-outer: calc(var(--board-size) / var(--size));
-		--cell: calc(var(--cell-outer) - var(--grid-gap));
 	}
 
 	#controls {
@@ -309,26 +317,6 @@ input[type=text] {
 
 	.button-grid-item {
 		width: 28vw;
-	}
-
-	.candy-img {
-		height: var(--cell);
-		width: var(--cell);
-		vertical-align: middle;
-	}
-
-	table {
-		width: calc(var(--board-size) + var(--cell));
-	}
-
-	th {
-	  height: var(--cell-outer);
-	  width: var(--cell-outer);
-	}
-
-	td {
-	  height: var(--cell);
-	  width: var(--cell);
 	}
 
 }
