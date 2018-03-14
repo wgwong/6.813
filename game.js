@@ -184,9 +184,9 @@ Util.events(document, {
 
 		//programmatically create the game grid in the middle
 		//create the header row first
-		var headerRowHTML = "<tr><th></th>";
+		var headerRowHTML = "<tr><th class='short-height'></th>";
 		for (var i = 1; i <= size; i++) {
-			headerRowHTML += "<th>" + translatePositionToLetter(i) + "</th>";
+			headerRowHTML += "<td class='no-borders short-height'>" + translatePositionToLetter(i) + "</td>";
 		}
 		headerRowHTML += "</tr>";
 		$("#cellBoard").append(headerRowHTML);
@@ -194,7 +194,8 @@ Util.events(document, {
 		//next create the actual board
 		for (var i = 1; i <= size; i++) {
 			var rowHTML = "";
-			rowHTML += "<tr><td class='no-borders'>"+i+"</td>";
+
+			rowHTML += "<tr><th class='no-borders'>"+i+"</td>";
 			for (var j = 1; j <= size; j++) {
 				rowHTML += "<td id=cell-"+translatePositionToLetter(j)+"-"+i+"></td>";
 			}
@@ -215,7 +216,6 @@ Util.events(document, {
 		//add event listener for show hint button; add css animation to cells that can be valid moves
 		Util.one("#showHintButton").addEventListener("click", function() {
 			var hint = rules.getRandomValidMove();
-			console.log("hint: ", hint);
 			candiesToCrush = rules.getCandiesToCrushGivenMove(hint.candy, hint.direction); //calling this private function because there's no other way to get the other crushable candies without manually checking the entire board by hand
 
 			//remove any previous hints

@@ -126,7 +126,7 @@ body {
 
 
 header {
-	margin-right: 10px;
+	margin-right: 20px;
 	text-align: center;
 }
 
@@ -186,7 +186,7 @@ button:disabled  {
 
 main {
 	width: 50%;
-	margin-right: 10px;
+	margin-right: 20px;
 }
 
 .board {
@@ -216,9 +216,20 @@ table {
 	font-weight: bold;
 }
 
+/*
 th {
   height: var(--cell-outer);
   width: var(--cell-outer);
+}
+*/
+
+.short-height {
+	height: 30px;
+}
+
+th {
+  height: var(--cell-outer);
+  width: 30px;
 }
 
 td {
@@ -264,7 +275,7 @@ input[type=text] {
 	font-weight: bold;
 }
 
-@media (max-width: 1000px) and (min-width: 600px) {
+@media (max-width: 1100px) and (min-width: 600px) {
 	.flex-container {
 		flex-direction: column;
 	}
