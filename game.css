@@ -116,7 +116,7 @@ body {
 	width: 100%;
 }
 
-.flex-subsubcontainer {
+.left-column-buttons {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
@@ -132,7 +132,7 @@ header {
 
 .title-text {
 	color: var(--color-blue);
-	font-size: 48px;
+	font-size: 28pt;
 	text-align: center;
 	font-weight: bold;
 	margin-bottom: 10px;
@@ -274,6 +274,9 @@ input[type=text] {
 	.flex-subitem {
 		margin-right: 10px;
 	}
+	.title-text {
+		font-size: 40pt;
+	}
 	.left-column-buttons {
 		width: 200px;
 	}
@@ -286,7 +289,7 @@ input[type=text] {
 	.flex-subcontainer {
 		flex-direction: column;
 	}
-	.flex-subsubcontainer {
+	.left-column-buttons {
 		width: 100%;
 		flex-direction: column;
 	}
@@ -303,7 +306,7 @@ input[type=text] {
 		--board-size: 70vw;
 	}
 
-	#controls {
+	.controls {
 		width: 90vw;
 	}
 
