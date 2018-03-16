@@ -74,8 +74,16 @@ var disableAllArrowButtons = function() {
 	Util.one("#downArrowButton").setAttribute("disabled", true);
 }
 
+var cleanInputColor = function() {
+	var candyLocation = Util.one("#candyLocation").value;
+
+	if (candyLocation == "") {
+		Util.one("#candyLocation").classList.remove("background-pink");
+	}
+}
+
 var validateInput = function() {
-	var candyLocation = $("#candyLocation").val();
+	var candyLocation = Util.one("#candyLocation").value;
 
 	if (candyLocation == "") {
 		disableAllArrowButtons();
@@ -138,7 +146,7 @@ var validateCrushable = function() {
 		}
 		Util.one("#candyLocation").removeAttribute("disabled");
 		Util.one("#candyLocation").classList.add("background-pink");
-		$("#candyLocation").focus();
+		Util.one("#candyLocation").focus();
 	} else {
 		disableAllArrowButtons();
 		Util.one("#crushButton").removeAttribute("disabled");
@@ -167,13 +175,13 @@ var cancelAnimations = function() {
 var startNewGame = function() {
 	rules.prepareNewGame(); //populate game board at start
 	Util.one("#score-div").innerHTML = "0"; //start game score at 0 no matter what
-	Util.one("#candyLocation").classList.add("background-pink"); //"invalid input" at start, so color background appropriately
-	$("#candyLocation").val(''); //clear input box on page load and new game
+	//Util.one("#candyLocation").classList.add("background-pink"); //"invalid input" at start, so color background appropriately
+	Util.one("#candyLocation").innerHTML = ""; //clear input box on page load and new game
 	Util.one("#candyLocation").removeAttribute("disabled"); //enable candyLocation input just incase we press new game button while inputbox was disabled during long animation
-	$("#candyLocation").focus(); //focus should be on input box on page load and new game
+	Util.one("#candyLocation").focus(); //focus should be on input box on page load and new game
 	var colorCode = window.getComputedStyle(document.body).getPropertyValue('--color-light-gray');
-	$("#score-label").css("background-color", colorCode); //reset score background color to gray (default)
-	$("#score-label").css("color", "black");
+	Util.css(Util.one("#score-label"), {"background-color": colorCode}); //reset score background color to gray (default)
+	Util.css(Util.one("#score-label"), {"color": "black"});
 	if (!hasValidMove()) {
 		Util.one("#showHintButton").setAttribute("disabled", true);
 	}
@@ -240,13 +248,13 @@ Util.events(document, {
 			}
 			validateCrushable();
 			validateInput(); //call this after validCrushable because validCrushable will paint the input background red if there's no crushable
-			$("#candyLocation").focus(); //input location should gain focus after show hint is pressed
+			Util.one("#candyLocation").focus(); //input location should gain focus after show hint is pressed
 
 		});
 
 		//add event listeners for each of the arrow/move buttons
 		Util.one("#leftArrowButton").addEventListener("click", function() {
-			var location = $("#candyLocation").val();
+			var location = Util.one("#candyLocation").value;
 			var position = getPositionFromInput(location);
 			var col = translateLetterToPosition(location[0])-1; //assuming correct format
 			var row = parseInt(location[1])-1; //assuming correct format
@@ -259,11 +267,11 @@ Util.events(document, {
 			}
 			$(".pulse").removeClass("pulse"); //remove any hints
 			disableAllArrowButtons();
-			$("#candyLocation").focus();
+			Util.one("#candyLocation").focus();
 		});
 
 		Util.one("#rightArrowButton").addEventListener("click", function() {
-			var location = $("#candyLocation").val();
+			var location = Util.one("#candyLocation").value;
 			var position = getPositionFromInput(location);
 			var col = translateLetterToPosition(location[0])-1; //assuming correct format
 			var row = parseInt(location[1])-1; //assuming correct format
@@ -276,11 +284,11 @@ Util.events(document, {
 			}
 			$(".pulse").removeClass("pulse"); //remove any hints
 			disableAllArrowButtons();
-			$("#candyLocation").focus();
+			Util("#candyLocation").focus();
 		});
 
 		Util.one("#upArrowButton").addEventListener("click", function() {
-			var location = $("#candyLocation").val();
+			var location = Util.one("#candyLocation").value;
 			var position = getPositionFromInput(location);
 			var col = translateLetterToPosition(location[0])-1; //assuming correct format
 			var row = parseInt(location[1])-1; //assuming correct format
@@ -293,11 +301,11 @@ Util.events(document, {
 			}
 			$(".pulse").removeClass("pulse"); //remove any hints
 			disableAllArrowButtons();
-			$("#candyLocation").focus();
+			Util("#candyLocation").focus();
 		});
 
 		Util.one("#downArrowButton").addEventListener("click", function() {
-			var location = $("#candyLocation").val();
+			var location = Util.one("#candyLocation").value;
 			var position = getPositionFromInput(location);
 			var col = translateLetterToPosition(location[0])-1; //assuming correct format
 			var row = parseInt(location[1])-1; //assuming correct format
@@ -310,7 +318,7 @@ Util.events(document, {
 			}
 			$(".pulse").removeClass("pulse"); //remove any hints
 			disableAllArrowButtons();
-			$("#candyLocation").focus();
+			Util("#candyLocation").focus();
 		});
 
 		//add event listener for crushbutton; will crush and repopulate crushables
