@@ -176,7 +176,7 @@ var startNewGame = function() {
 	rules.prepareNewGame(); //populate game board at start
 	Util.one("#score-div").innerHTML = "0"; //start game score at 0 no matter what
 	//Util.one("#candyLocation").classList.add("background-pink"); //"invalid input" at start, so color background appropriately
-	Util.one("#candyLocation").innerHTML = ""; //clear input box on page load and new game
+	Util.one("#candyLocation").value = ""; //clear input box on page load and new game
 	Util.one("#candyLocation").removeAttribute("disabled"); //enable candyLocation input just incase we press new game button while inputbox was disabled during long animation
 	Util.one("#candyLocation").focus(); //focus should be on input box on page load and new game
 	var colorCode = window.getComputedStyle(document.body).getPropertyValue('--color-light-gray');
@@ -242,9 +242,10 @@ Util.events(document, {
 				var col = candyToCrush.col;
 				var row = candyToCrush.row;
 				var candyId = "#cell-"+translatePositionToLetter(col+1)+"-"+(row+1);
-				var children = $(candyId).children();
-
-				children.addClass("pulse");
+				var children = Util.one(candyId).children;
+				for (var i = 0; i < children.length; i++ ) {
+					children[i].classList.add("pulse");
+				};
 			}
 			validateCrushable();
 			validateInput(); //call this after validCrushable because validCrushable will paint the input background red if there's no crushable
@@ -260,12 +261,12 @@ Util.events(document, {
 			var row = parseInt(location[1])-1; //assuming correct format
 
 			if (rules.isMoveTypeValid(position, "left") > 0) {
-				$("#showHintButton").prop("disabled", true);
-				$("#candyLocation").val('');
-				$("#candyLocation").prop("disabled", true);
+				Util.one("#showHintButton").setAttribute("disabled", true);
+				Util.one("#candyLocation").value = "";
+				Util.one("#candyLocation").setAttribute("disabled", true);
 				board.flipCandies(position, board.getCandyAt(row, col-1));
 			}
-			$(".pulse").removeClass("pulse"); //remove any hints
+			Util.all(".pulse").forEach(function(e) {e.classList.remove("pulse")}); //remove any hints
 			disableAllArrowButtons();
 			Util.one("#candyLocation").focus();
 		});
@@ -277,14 +278,14 @@ Util.events(document, {
 			var row = parseInt(location[1])-1; //assuming correct format
 
 			if (rules.isMoveTypeValid(position, "right") > 0) {
-				$("#showHintButton").prop("disabled", true);
-				$("#candyLocation").val('');
-				$("#candyLocation").prop("disabled", true);
+				Util.one("#showHintButton").setAttribute("disabled", true);
+				Util.one("#candyLocation").value = "";
+				Util.one("#candyLocation").setAttribute("disabled", true);
 				board.flipCandies(position, board.getCandyAt(row, col+1));
 			}
-			$(".pulse").removeClass("pulse"); //remove any hints
+			Util.all(".pulse").forEach(function(e) {e.classList.remove("pulse")}); //remove any hints
 			disableAllArrowButtons();
-			Util("#candyLocation").focus();
+			Util.one("#candyLocation").focus();
 		});
 
 		Util.one("#upArrowButton").addEventListener("click", function() {
@@ -294,14 +295,14 @@ Util.events(document, {
 			var row = parseInt(location[1])-1; //assuming correct format
 
 			if (rules.isMoveTypeValid(position, "up") > 0) {
-				$("#showHintButton").prop("disabled", true);
-				$("#candyLocation").val('');
-				$("#candyLocation").prop("disabled", true);
+				Util.one("#showHintButton").setAttribute("disabled", true);
+				Util.one("#candyLocation").value = "";
+				Util.one("#candyLocation").setAttribute("disabled", true);
 				board.flipCandies(position, board.getCandyAt(row-1, col));
 			}
-			$(".pulse").removeClass("pulse"); //remove any hints
+			Util.all(".pulse").forEach(function(e) {e.classList.remove("pulse")}); //remove any hints
 			disableAllArrowButtons();
-			Util("#candyLocation").focus();
+			Util.one("#candyLocation").focus();
 		});
 
 		Util.one("#downArrowButton").addEventListener("click", function() {
@@ -311,21 +312,21 @@ Util.events(document, {
 			var row = parseInt(location[1])-1; //assuming correct format
 
 			if (rules.isMoveTypeValid(position, "down") > 0) {
-				$("#showHintButton").prop("disabled", true);
-				$("#candyLocation").val('');
-				$("#candyLocation").prop("disabled", true);
+				Util.one("#showHintButton").setAttribute("disabled", true);
+				Util.one("#candyLocation").value = "";
+				Util.one("#candyLocation").setAttribute("disabled", true);
 				board.flipCandies(position, board.getCandyAt(row+1, col));
 			}
-			$(".pulse").removeClass("pulse"); //remove any hints
+			Util.all(".pulse").forEach(function(e) {e.classList.remove("pulse")}); //remove any hints
 			disableAllArrowButtons();
-			Util("#candyLocation").focus();
+			Util.one("#candyLocation").focus();
 		});
 
 		//add event listener for crushbutton; will crush and repopulate crushables
 		Util.one("#crushButton").addEventListener("click", function() {
-			$(".pulse").removeClass("pulse"); //remove any hints
+			Util.all(".pulse").forEach(function(e) {e.classList.remove("pulse")}); //remove any hints
 			disableAllArrowButtons();
-			$("#crushButton").prop("disabled", true);
+			Util.one("#crushButton").setAttribute("disabled", true);
 
 			rules.removeCrushes(rules.getCandyCrushes());
 
@@ -474,17 +475,17 @@ Util.events(board, {
 	// update the score
 	"scoreUpdate": function(e) {
 		//get the appropriate color scheme
-		$("#score-div").text(e.detail.score);
+		Util.one("#score-div").innerHTML = e.detail.score;
 
 		if (e.detail.candy != null) {
 			var color = e.detail.candy.color;
 			var colorCode = window.getComputedStyle(document.body).getPropertyValue('--color-'+color);
 			
-			$("#score-label").css("background-color", colorCode);
+			Util.css(Util.one("#score-label"), {"background-color": colorCode});
 			if (color == "purple" || color == "blue" || color == "green" || color == "red") {
-				$("#score-label").css("color", "white");
+				Util.css(Util.one("#score-label"), {"color": "white"});
 			} else {
-				$("#score-label").css("color", "black");
+				Util.css(Util.one("#score-label"), {"color": "black"});
 			}
 		}
 	},
