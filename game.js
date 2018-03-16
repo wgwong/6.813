@@ -24,6 +24,8 @@ var board = new Board(size);
 // load a rule
 var rules = new Rules(board);
 
+var animationsInProgress = [];
+
 var translatePositionToLetter = function(pos) {
 	return letterMapping[pos];
 }
@@ -67,10 +69,10 @@ var calculateSpeed = function(fromCol, fromRow, toCol, toRow) {
 }
 
 var disableAllArrowButtons = function() {
-	$("#leftArrowButton").prop("disabled", true);
-	$("#rightArrowButton").prop("disabled", true);
-	$("#upArrowButton").prop("disabled", true);
-	$("#downArrowButton").prop("disabled", true);
+	Util.one("#leftArrowButton").setAttribute("disabled", true);
+	Util.one("#rightArrowButton").setAttribute("disabled", true);
+	Util.one("#upArrowButton").setAttribute("disabled", true);
+	Util.one("#downArrowButton").setAttribute("disabled", true);
 }
 
 var validateInput = function() {
@@ -78,29 +80,29 @@ var validateInput = function() {
 
 	if (candyLocation == "") {
 		disableAllArrowButtons();
-		$("#candyLocation").addClass("background-pink"); //give invalid background color to indicate invalid location input
+		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
 		return;
 	}
 	if (candyLocation.length != 2 && candyLocation.length != 3) {
 		disableAllArrowButtons();
-		$("#candyLocation").addClass("background-pink"); //give invalid background color to indicate invalid location input
+		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
 		return;
 	}
 	var letterSet = new Set(letterList.slice(0, size));
 	if (!letterSet.has(candyLocation[0].toLowerCase())) {
 		disableAllArrowButtons();
-		$("#candyLocation").addClass("background-pink"); //give invalid background color to indicate invalid location input
+		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
 		return;
 	}
 	if (!$.isNumeric(candyLocation.slice(1, Math.min(3, candyLocation.length)))) {
 		disableAllArrowButtons();
-		$("#candyLocation").addClass("background-pink"); //give invalid background color to indicate invalid location input
+		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
 		return;
 	}
 
 	if (!(parseInt(candyLocation.slice(1, Math.min(3, candyLocation.length))) > 0 && parseInt(candyLocation.slice(1, Math.min(3, candyLocation.length))) < size + 1)) {
 		disableAllArrowButtons();
-		$("#candyLocation").addClass("background-pink"); //give invalid background color to indicate invalid location input
+		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
 		return;
 	}
 	var position = getPositionFromInput(candyLocation);
@@ -111,39 +113,39 @@ var validateInput = function() {
 	var downValid = rules.isMoveTypeValid(position, "down") > 0;
 
 	if (leftValid) {
-		$("#leftArrowButton").prop("disabled", false);
+		Util.one("#leftArrowButton").removeAttribute("disabled");
 	}
 	if (rightValid) {
-		$("#rightArrowButton").prop("disabled", false);
+		Util.one("#rightArrowButton").removeAttribute("disabled");
 	}
 	if (upValid) {
-		$("#upArrowButton").prop("disabled", false);
+		Util.one("#upArrowButton").removeAttribute("disabled");
 	}
 	if (downValid) {
-		$("#downArrowButton").prop("disabled", false);
+		Util.one("#downArrowButton").removeAttribute("disabled");
 	}
 	
 	if (leftValid || rightValid || upValid || downValid) {
-		$("#candyLocation").removeClass("background-pink"); //remove invalid background color only if it's a valid move
+		Util.one("#candyLocation").classList.remove("background-pink"); //remove invalid background color only if it's a valid move
 	}
 }
 
 var validateCrushable = function() {
 	var numCrushes = rules.getCandyCrushes().length;
 	if (numCrushes == 0) {
-		$("#crushButton").prop("disabled", true);
+		Util.one("#crushButton").setAttribute("disabled", true);
 		if (hasValidMove()) {
-			$("#showHintButton").prop("disabled", false);
+			Util.one("#showHintButton").removeAttribute("disabled");
 		}
-		$("#candyLocation").prop("disabled", false);
-		$("#candyLocation").addClass("background-pink");
+		Util.one("#candyLocation").removeAttribute("disabled");
+		Util.one("#candyLocation").classList.add("background-pink");
 		$("#candyLocation").focus();
 	} else {
 		disableAllArrowButtons();
-		$("#crushButton").prop("disabled", false);
-		$("#showHintButton").prop("disabled", true);
-		$("#candyLocation").prop("disabled", true);
-		$("#candyLocation").removeClass("background-pink");
+		Util.one("#crushButton").removeAttribute("disabled");
+		Util.one("#showHintButton").setAttribute("disabled", true);
+		Util.one("#candyLocation").setAttribute("disabled", true);
+		Util.one("#candyLocation").classList.remove("background-pink");
 	}
 }
 
@@ -156,18 +158,25 @@ var hasValidMove = function () {
 	return true;
 }
 
+var cancelAnimations = function() {
+	animationsInProgress.forEach(function(a) {
+		a.cancel();
+	});
+	animationsInProgress = [];
+}
+
 var startNewGame = function() {
 	rules.prepareNewGame(); //populate game board at start
-	$("#score-div").text("0"); //start game score at 0 no matter what
-	$("#candyLocation").addClass("background-pink"); //"invalid input" at start, so color background appropriately
+	Util.one("#score-div").innerHTML = "0"; //start game score at 0 no matter what
+	Util.one("#candyLocation").classList.add("background-pink"); //"invalid input" at start, so color background appropriately
 	$("#candyLocation").val(''); //clear input box on page load and new game
-	$("#candyLocation").prop("disabled", false); //enable candyLocation input just incase we press new game button while inputbox was disabled during long animation
+	Util.one("#candyLocation").removeAttribute("disabled"); //enable candyLocation input just incase we press new game button while inputbox was disabled during long animation
 	$("#candyLocation").focus(); //focus should be on input box on page load and new game
 	var colorCode = window.getComputedStyle(document.body).getPropertyValue('--color-light-gray');
 	$("#score-label").css("background-color", colorCode); //reset score background color to gray (default)
 	$("#score-label").css("color", "black");
 	if (!hasValidMove()) {
-		$("#showHintButton").prop("disabled", true);
+		Util.one("#showHintButton").setAttribute("disabled", true);
 	}
 	//disable all input buttons just in case we press new game button while they were active
 	disableAllArrowButtons();
@@ -220,6 +229,8 @@ Util.events(document, {
 
 			//remove any previous hints
 			$(".pulse").removeClass("pulse");
+			//remove any animations at all
+			cancelAnimations();
 
 			for (var i in candiesToCrush) {
 				var candyToCrush = candiesToCrush[i];
@@ -230,6 +241,8 @@ Util.events(document, {
 
 				children.addClass("pulse");
 			}
+			validateCrushable();
+			$("#candyLocation").focus(); //input location should gain focus after show hint is pressed
 
 		});
 
@@ -309,6 +322,9 @@ Util.events(document, {
 			$("#crushButton").prop("disabled", true);
 
 			rules.removeCrushes(rules.getCandyCrushes());
+			if (hasValidMove()) { //enable showhint button if valid crushes exist after crushing
+				Util.one("#showHintButton").removeAttribute("disabled");
+			}
 
 			var afterAnimationFunction = function() {
 				rules.moveCandiesDown();
@@ -362,6 +378,7 @@ Util.events(board, {
 			};
 			var animation = imgChild.animate(keyframes, speed);
 			animation.onfinish = afterAnimationFunction;
+			animationsInProgress.push(animation);
 		}
 	},
 
@@ -432,6 +449,8 @@ Util.events(board, {
 		var afterAnimationFunction = function() {
 			$(candyId).empty();
 		};
+
+		
 
 		Util.afterAnimation(Util.one(candyId).querySelector("img"), "disappear").then(afterAnimationFunction, afterAnimationFunction);
 		//shouldn't need to call validateCrushable() here since add will be called anyways to repopulate the board
