@@ -1,7 +1,3 @@
-//TODO use only jquery OR Util (be consistent)
-//TODO for game.css, make classes for things that I'm modifying by identifying by ID
-//	also cleanup my media queries (esp the small one)
-
 // Hand it in this way: for simpler testing, always use the same seed.
 Math.seedrandom(0);
 
@@ -25,6 +21,10 @@ var board = new Board(size);
 // load a rule
 var rules = new Rules(board);
 
+var isNumeric = function(n) {
+	return !isNaN(parseInt(n)) && isFinite(n);
+}
+
 var translatePositionToLetter = function(pos) {
 	return letterMapping[pos];
 }
@@ -35,7 +35,7 @@ var translateLetterToPosition = function(letter) {
 
 var getPositionFromInput = function(location) {
 	var col = translateLetterToPosition(location[0])-1; //assuming correct format
-	var row = parseInt(location[1])-1; //assuming correct format
+	var row = parseInt(location.substring(1,location.length))-1; //assuming correct format
 	position = board.getCandyAt(row, col);
 	return position;
 }
@@ -85,33 +85,34 @@ var cleanInputColor = function() {
 var validateInput = function() {
 	var candyLocation = Util.one("#candyLocation").value;
 
+	disableAllArrowButtons();
 	if (candyLocation == "") {
-		disableAllArrowButtons();
 		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
 		return;
 	}
 	if (candyLocation.length != 2 && candyLocation.length != 3) {
-		disableAllArrowButtons();
 		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
 		return;
 	}
 	var letterSet = new Set(letterList.slice(0, size));
 	if (!letterSet.has(candyLocation[0].toLowerCase())) {
-		disableAllArrowButtons();
 		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
 		return;
 	}
-	if (!$.isNumeric(candyLocation.slice(1, Math.min(3, candyLocation.length)))) {
-		disableAllArrowButtons();
+	if (!isNumeric(candyLocation.slice(1, Math.min(3, candyLocation.length)))) {
 		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
 		return;
 	}
 
 	if (!(parseInt(candyLocation.slice(1, Math.min(3, candyLocation.length))) > 0 && parseInt(candyLocation.slice(1, Math.min(3, candyLocation.length))) < size + 1)) {
-		disableAllArrowButtons();
 		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
 		return;
 	}
+	if (candyLocation.includes(".")) {
+		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
+		return;
+	}
+
 	var position = getPositionFromInput(candyLocation);
 
 	var leftValid = rules.isMoveTypeValid(position, "left") > 0;
@@ -200,23 +201,36 @@ Util.events(document, {
 
 		//programmatically create the game grid in the middle
 		//create the header row first
-		var headerRowHTML = "<tr><th class='short-height'></th>";
+
+		var trTop = document.createElement("tr");
+		var thTop = document.createElement("th");
+		thTop.classList.add("short-height");
+		trTop.append(thTop);
 		for (var i = 1; i <= size; i++) {
-			headerRowHTML += "<td class='no-borders short-height'>" + translatePositionToLetter(i) + "</td>";
+			var td = document.createElement("td");
+			td.classList.add("no-borders");
+			td.classList.add("short-height");
+			td.append(translatePositionToLetter(i));
+			trTop.append(td);
 		}
-		headerRowHTML += "</tr>";
-		$("#cellBoard").append(headerRowHTML);
+		Util.one("#cellBoard").append(trTop);
 
 		//next create the actual board
-		for (var i = 1; i <= size; i++) {
-			var rowHTML = "";
 
-			rowHTML += "<tr><th class='no-borders'>"+i+"</td>";
+
+		for (var i = 1; i <= size; i++) {
+			var tr = document.createElement("tr");
+			var th = document.createElement("th");
+			th.classList.add("no-borders");
+			th.append(i);
+			tr.append(th);
+
 			for (var j = 1; j <= size; j++) {
-				rowHTML += "<td id=cell-"+translatePositionToLetter(j)+"-"+i+"></td>";
+				var td = document.createElement("td");
+				td.setAttribute("id", "cell-"+translatePositionToLetter(j)+"-"+i);
+				tr.append(td);
 			}
-			rowHTML += "</tr>";
-			$("#cellBoard").append(rowHTML);
+			Util.one("#cellBoard").append(tr);
 		}
 
 		startNewGame(); //start new game
@@ -258,7 +272,7 @@ Util.events(document, {
 			var location = Util.one("#candyLocation").value;
 			var position = getPositionFromInput(location);
 			var col = translateLetterToPosition(location[0])-1; //assuming correct format
-			var row = parseInt(location[1])-1; //assuming correct format
+			var row = parseInt(location.substring(1,location.length))-1; //assuming correct format
 
 			if (rules.isMoveTypeValid(position, "left") > 0) {
 				Util.one("#showHintButton").setAttribute("disabled", true);
@@ -275,7 +289,7 @@ Util.events(document, {
 			var location = Util.one("#candyLocation").value;
 			var position = getPositionFromInput(location);
 			var col = translateLetterToPosition(location[0])-1; //assuming correct format
-			var row = parseInt(location[1])-1; //assuming correct format
+			var row = parseInt(location.substring(1,location.length))-1; //assuming correct format
 
 			if (rules.isMoveTypeValid(position, "right") > 0) {
 				Util.one("#showHintButton").setAttribute("disabled", true);
@@ -292,7 +306,7 @@ Util.events(document, {
 			var location = Util.one("#candyLocation").value;
 			var position = getPositionFromInput(location);
 			var col = translateLetterToPosition(location[0])-1; //assuming correct format
-			var row = parseInt(location[1])-1; //assuming correct format
+			var row = parseInt(location.substring(1,location.length))-1; //assuming correct format
 
 			if (rules.isMoveTypeValid(position, "up") > 0) {
 				Util.one("#showHintButton").setAttribute("disabled", true);
@@ -309,7 +323,7 @@ Util.events(document, {
 			var location = Util.one("#candyLocation").value;
 			var position = getPositionFromInput(location);
 			var col = translateLetterToPosition(location[0])-1; //assuming correct format
-			var row = parseInt(location[1])-1; //assuming correct format
+			var row = parseInt(location.substring(1,location.length))-1; //assuming correct format
 
 			if (rules.isMoveTypeValid(position, "down") > 0) {
 				Util.one("#showHintButton").setAttribute("disabled", true);
@@ -369,7 +383,11 @@ Util.events(board, {
 		var fromRow = e.detail.fromRow;
 
 		var candyId = "#cell-"+translatePositionToLetter(toCol+1)+"-"+(toRow+1);
-		$(candyId).empty().append("<img src='graphics/" + color + "-candy.png' class='candy-img'>");
+		var imgSrc = document.createElement("img");
+		imgSrc.setAttribute("src", "graphics/" + color + "-candy.png");
+		imgSrc.classList.add("candy-img");
+		Util.one(candyId).innerHTML = "";
+		Util.one(candyId).append(imgSrc);
 
 		if (fromCol != null && fromRow != null) { //only animate add if not populating board at start/new game
 			var speedScale = calculateSpeed(fromCol, fromRow, toCol, toRow);
@@ -401,7 +419,11 @@ Util.events(board, {
 		//var speed = Math.round(parseFloat(durationMoveCode) * speedScale * millisecondsPerSecond);
 
 		var candyId = "#cell-"+translatePositionToLetter(toCol+1)+"-"+(toRow+1);
-		$(candyId).empty().append("<img src='graphics/" + color + "-candy.png' class='candy-img'>");
+		var imgSrc = document.createElement("img");
+		imgSrc.setAttribute("src", "graphics/" + color + "-candy.png");
+		imgSrc.classList.add("candy-img");
+		Util.one(candyId).innerHTML = "";
+		Util.one(candyId).append(imgSrc);
 	
 		var imgChild = Util.one(candyId).querySelector("img");
 
