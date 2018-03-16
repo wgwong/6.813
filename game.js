@@ -13,6 +13,7 @@ const letterMapping = {1: 'a', 2: 'b', 3: 'c', 4: 'd', 5: 'e', 6: 'f', 7: 'g', 8
 const positionMapping = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7, 'h': 8, 'i': 9, 'j': 10}
 const letterList = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
 const millisecondsPerSecond = 1000; //conversion unit
+const negative = -1;
 
 // Holds DOM elements that don’t change, to avoid repeatedly querying the DOM
 var dom = {};
@@ -23,8 +24,6 @@ var board = new Board(size);
 
 // load a rule
 var rules = new Rules(board);
-
-var animationsInProgress = [];
 
 var translatePositionToLetter = function(pos) {
 	return letterMapping[pos];
@@ -159,10 +158,10 @@ var hasValidMove = function () {
 }
 
 var cancelAnimations = function() {
-	animationsInProgress.forEach(function(a) {
-		a.cancel();
-	});
-	animationsInProgress = [];
+	Util.all(".pulse").forEach(function(e) {e.classList.remove("pulse")});;
+	Util.all(".disappearing").forEach(function(e) {e.classList.remove("disappearing")});
+	Util.all(".animate-vertical").forEach(function(e) {e.classList.remove("animate-vertical")});
+	Util.all(".animate-horizontal").forEach(function(e) {e.classList.remove("animate-horizontal")});
 }
 
 var startNewGame = function() {
@@ -227,9 +226,7 @@ Util.events(document, {
 			var hint = rules.getRandomValidMove();
 			candiesToCrush = rules.getCandiesToCrushGivenMove(hint.candy, hint.direction); //calling this private function because there's no other way to get the other crushable candies without manually checking the entire board by hand
 
-			//remove any previous hints
-			$(".pulse").removeClass("pulse");
-			//remove any animations at all
+			//remove any animations including previous hints
 			cancelAnimations();
 
 			for (var i in candiesToCrush) {
@@ -242,6 +239,7 @@ Util.events(document, {
 				children.addClass("pulse");
 			}
 			validateCrushable();
+			validateInput(); //call this after validCrushable because validCrushable will paint the input background red if there's no crushable
 			$("#candyLocation").focus(); //input location should gain focus after show hint is pressed
 
 		});
@@ -322,16 +320,21 @@ Util.events(document, {
 			$("#crushButton").prop("disabled", true);
 
 			rules.removeCrushes(rules.getCandyCrushes());
-			if (hasValidMove()) { //enable showhint button if valid crushes exist after crushing
-				Util.one("#showHintButton").removeAttribute("disabled");
-			}
 
 			var afterAnimationFunction = function() {
 				rules.moveCandiesDown();
+				if (hasValidMove() && rules.getCandyCrushes().length == 0) { //enable show hint button if no valid crushes exist after crushing
+					Util.one("#showHintButton").removeAttribute("disabled");
+				}
 			};
 
-			var durationFadeCode = window.getComputedStyle(document.body).getPropertyValue('--duration-fade');
-			Util.delay((parseFloat(durationFadeCode)*millisecondsPerSecond)).then(afterAnimationFunction, afterAnimationFunction);
+			//if the showhint button hasn't already been pressed while we were animating the crush, then also animate the "moving candies down"
+			if (Util.all(".pulse").length > 0) {
+				afterAnimationFunction();
+			} else {
+				var durationFadeCode = window.getComputedStyle(document.body).getPropertyValue('--duration-fade');
+				Util.delay((parseFloat(durationFadeCode)*millisecondsPerSecond)).then(afterAnimationFunction, afterAnimationFunction);
+			}
 		});
 	},
 
@@ -360,25 +363,19 @@ Util.events(board, {
 		$(candyId).empty().append("<img src='graphics/" + color + "-candy.png' class='candy-img'>");
 
 		if (fromCol != null && fromRow != null) { //only animate add if not populating board at start/new game
-			var direction = calculateDirection(fromCol, fromRow, toCol, toRow);
 			var speedScale = calculateSpeed(fromCol, fromRow, toCol, toRow);
-			var durationMoveCode = window.getComputedStyle(document.body).getPropertyValue('--duration-move');
-			var speed = Math.round(parseFloat(durationMoveCode) * speedScale * millisecondsPerSecond);
+			var heightToDrop = negative * 100 * (toRow - fromRow);
 
 			var imgChild = Util.one(candyId).querySelector("img");
 
-			var heightToDrop = 100 * (toRow - fromRow);
-
-			var keyframes = {
-				transform: ['translateY(-' + heightToDrop + '%)', 'translateY(0%)']
-			}
+			imgChild.style.setProperty("--speed", speedScale);
+			imgChild.style.setProperty("--distance", heightToDrop);
+			imgChild.classList.add("animate-vertical");
 
 			var afterAnimationFunction = function() {
 				validateCrushable();
 			};
-			var animation = imgChild.animate(keyframes, speed);
-			animation.onfinish = afterAnimationFunction;
-			animationsInProgress.push(animation);
+			Util.afterAnimation(imgChild, "move-vertical").then(afterAnimationFunction, afterAnimationFunction);
 		}
 	},
 
@@ -391,45 +388,53 @@ Util.events(board, {
 		var fromRow = e.detail.fromRow;
 		var direction = calculateDirection(fromCol, fromRow, toCol, toRow);
 		var speedScale = calculateSpeed(fromCol, fromRow, toCol, toRow);
-		var durationMoveCode = window.getComputedStyle(document.body).getPropertyValue('--duration-move');
-		var speed = Math.round(parseFloat(durationMoveCode) * speedScale * millisecondsPerSecond);
+		//var durationMoveCode = window.getComputedStyle(document.body).getPropertyValue('--duration-move');
+		//var speed = Math.round(parseFloat(durationMoveCode) * speedScale * millisecondsPerSecond);
 
 		var candyId = "#cell-"+translatePositionToLetter(toCol+1)+"-"+(toRow+1);
 		$(candyId).empty().append("<img src='graphics/" + color + "-candy.png' class='candy-img'>");
 	
 		var imgChild = Util.one(candyId).querySelector("img");
 
-		var keyframes = {
-			transform: []
-		}
-
+		imgChild.style.setProperty("--speed", speedScale);
+		var animationToWaitFor = "";
 		if (direction == "up") {
 			var distance = 100 * Math.abs(toRow - fromRow);
-			keyframes["transform"].push('translateY(' + distance + '%)');
-			keyframes["transform"].push('translateY(0%)');
+			//keyframes["transform"].push('translateY(' + distance + '%)');
+			//keyframes["transform"].push('translateY(0%)');
+			imgChild.style.setProperty("--distance", distance);
+			imgChild.classList.add("animate-vertical");
+			animationToWaitFor = "move-vertical";
 		}
 		if (direction == "down") {
 			var distance = 100 * Math.abs(toRow - fromRow);
-			keyframes["transform"].push('translateY(-' + distance + '%)');
-			keyframes["transform"].push('translateY(0%)');
+			//keyframes["transform"].push('translateY(-' + distance + '%)');
+			//keyframes["transform"].push('translateY(0%)');
+			imgChild.style.setProperty("--distance", negative * distance);
+			imgChild.classList.add("animate-vertical");
+			animationToWaitFor = "move-vertical";
 		}
 		if (direction == "left") {
 			var distance = 100 * Math.abs(toCol - fromCol);
-			keyframes["transform"].push('translateX(' + distance + '%)');
-			keyframes["transform"].push('translateX(0%)');
+			//keyframes["transform"].push('translateX(' + distance + '%)');
+			//keyframes["transform"].push('translateX(0%)');
+			imgChild.style.setProperty("--distance", distance);
+			imgChild.classList.add("animate-horizontal");
+			animationToWaitFor = "move-horizontal";
 		}
 		if (direction == "right") {
 			var distance = 100 * Math.abs(toCol - fromCol);
-			keyframes["transform"].push('translateX(-' + distance + '%)');
-			keyframes["transform"].push('translateX(0%)');
+			//keyframes["transform"].push('translateX(-' + distance + '%)');
+			//keyframes["transform"].push('translateX(0%)');
+			imgChild.style.setProperty("--distance", negative * distance);
+			imgChild.classList.add("animate-horizontal");
+			animationToWaitFor = "move-horizontal";
 		}
 
 		var afterAnimationFunction = function() {
 			validateCrushable();
 		};
-		var animation = imgChild.animate(keyframes, speed);
-		animation.onfinish = afterAnimationFunction;
-		
+		Util.afterAnimation(imgChild, animationToWaitFor).then(afterAnimationFunction, afterAnimationFunction);
 	},
 
 	// remove a candy from the board
@@ -441,18 +446,20 @@ Util.events(board, {
 		var candyId = "#cell-"+translatePositionToLetter(col+1)+"-"+(row+1);
 
 		var imgChild = Util.one(candyId).querySelector("img");
+
+		/*
 		var styles = {
 			animation: "disappear" + durationFadeCode + " 1"
 		};
 		Util.css(imgChild, styles);
+		*/
+		imgChild.classList.add("disappearing");
 
 		var afterAnimationFunction = function() {
-			$(candyId).empty();
+			imgChild.remove();
 		};
 
-		
-
-		Util.afterAnimation(Util.one(candyId).querySelector("img"), "disappear").then(afterAnimationFunction, afterAnimationFunction);
+		Util.afterAnimation(imgChild, "disappear").then(afterAnimationFunction, afterAnimationFunction);
 		//shouldn't need to call validateCrushable() here since add will be called anyways to repopulate the board
 	},
 

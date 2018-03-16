@@ -11,10 +11,57 @@
 	--duration-fade: .4s;
 }
 
+.animate-vertical {
+	animation-name: move-vertical;
+	animation-duration: calc(var(--speed) * var(--duration-move));
+	animation-iteration-count: 1;
+	animation-timing-function: linear;
+}
+
+.animate-horizontal {
+	animation-name: move-horizontal;
+	animation-duration: calc(var(--speed) * var(--duration-move));
+	animation-iteration-count: 1;
+	animation-timing-function: linear;
+}
+
+@keyframes move-vertical {
+	0% {
+		transform: translateY(calc(var(--distance) * 1%));
+		}
+	100% {
+		transform: translateY(0);
+	}
+}
+
+@keyframes move-horizontal {
+	0% {
+		transform: translateX(calc(var(--distance) * 1%));
+		}
+	100% {
+		transform: translateX(0);
+	}
+}
+
+.disappearing {
+	animation-name: disappear;
+	animation-duration: var(--duration-fade);
+	animation-iteration-count: 1;
+	animation-timing-function: linear;
+}
+
 @keyframes disappear {
 	to {
 		opacity: 0;
 	}
+}
+
+.pulse {
+	animation-name: pulse-animation;
+	animation-duration: 1250ms;
+	transform-origin:70% 70%;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear;
 }
 
 @keyframes pulse-animation {
@@ -86,14 +133,6 @@ body {
 
 .no-select {
 	user-select: none;
-}
-
-.pulse {
-	animation-name: pulse-animation;
-	animation-duration: 1250ms;
-	transform-origin:70% 70%;
-	animation-iteration-count: infinite;
-	animation-timing-function: linear;
 }
 
 .flex-container {
@@ -287,6 +326,11 @@ input[type=text] {
 	.flex-subitem {
 		margin-right: 10px;
 	}
+
+	header {
+		margin-right: 0px;
+	}
+
 	.title-text {
 		font-size: 40pt;
 	}
@@ -302,6 +346,11 @@ input[type=text] {
 	.flex-subcontainer {
 		flex-direction: column;
 	}
+	
+	header {
+		margin-right: 0px;
+	}
+
 	.left-column-buttons {
 		width: 100%;
 		flex-direction: column;
@@ -316,11 +365,11 @@ input[type=text] {
 	}
 
 	.board {
-		--board-size: 65vw;
+		--board-size: 55vw;
 	}
 
 	.controls {
-		width: 90vw;
+		width: 80vw;
 	}
 
 	.button-grid-item {
