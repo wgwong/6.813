@@ -82,10 +82,11 @@ var cleanInputColor = function() {
 	}
 }
 
+//validates the input value of the text box and appropriate paints the background color and/or disables/enables the arrow buttons
 var validateInput = function() {
 	var candyLocation = Util.one("#candyLocation").value;
 
-	disableAllArrowButtons();
+	disableAllArrowButtons(); //start off assuming we have all arrows disabled
 	if (candyLocation == "") {
 		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
 		return;
@@ -112,6 +113,7 @@ var validateInput = function() {
 		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
 		return;
 	}
+	//if we've reached this point, the user has entered a valid board coordinate, but is it a swappable/valid move?
 
 	var position = getPositionFromInput(candyLocation);
 
@@ -138,6 +140,7 @@ var validateInput = function() {
 	}
 }
 
+//validates whether we have attained a state where we have a crushable or not and appropriately enables/disables certain buttons/input on the board
 var validateCrushable = function() {
 	var numCrushes = rules.getCandyCrushes().length;
 	if (numCrushes == 0) {
@@ -166,6 +169,7 @@ var hasValidMove = function () {
 	return true;
 }
 
+//removes all animations ongoing right now
 var cancelAnimations = function() {
 	Util.all(".pulse").forEach(function(e) {e.classList.remove("pulse")});;
 	Util.all(".disappearing").forEach(function(e) {e.classList.remove("disappearing")});
@@ -173,10 +177,10 @@ var cancelAnimations = function() {
 	Util.all(".animate-horizontal").forEach(function(e) {e.classList.remove("animate-horizontal")});
 }
 
+//starts a new game state
 var startNewGame = function() {
 	rules.prepareNewGame(); //populate game board at start
 	Util.one("#score-div").innerHTML = "0"; //start game score at 0 no matter what
-	//Util.one("#candyLocation").classList.add("background-pink"); //"invalid input" at start, so color background appropriately
 	Util.one("#candyLocation").value = ""; //clear input box on page load and new game
 	Util.one("#candyLocation").removeAttribute("disabled"); //enable candyLocation input just incase we press new game button while inputbox was disabled during long animation
 	Util.one("#candyLocation").focus(); //focus should be on input box on page load and new game
@@ -201,7 +205,6 @@ Util.events(document, {
 
 		//programmatically create the game grid in the middle
 		//create the header row first
-
 		var trTop = document.createElement("tr");
 		var thTop = document.createElement("th");
 		thTop.classList.add("short-height");
@@ -215,9 +218,7 @@ Util.events(document, {
 		}
 		Util.one("#cellBoard").append(trTop);
 
-		//next create the actual board
-
-
+		//next, create the actual board
 		for (var i = 1; i <= size; i++) {
 			var tr = document.createElement("tr");
 			var th = document.createElement("th");
@@ -251,6 +252,7 @@ Util.events(document, {
 			//remove any animations including previous hints
 			cancelAnimations();
 
+			//add pulsing animation class to all relevant candies
 			for (var i in candiesToCrush) {
 				var candyToCrush = candiesToCrush[i];
 				var col = candyToCrush.col;
@@ -382,6 +384,7 @@ Util.events(board, {
 		var fromCol = e.detail.fromCol;
 		var fromRow = e.detail.fromRow;
 
+		//create the actual image img and add it to the html
 		var candyId = "#cell-"+translatePositionToLetter(toCol+1)+"-"+(toRow+1);
 		var imgSrc = document.createElement("img");
 		imgSrc.setAttribute("src", "graphics/" + color + "-candy.png");
@@ -415,9 +418,8 @@ Util.events(board, {
 		var fromRow = e.detail.fromRow;
 		var direction = calculateDirection(fromCol, fromRow, toCol, toRow);
 		var speedScale = calculateSpeed(fromCol, fromRow, toCol, toRow);
-		//var durationMoveCode = window.getComputedStyle(document.body).getPropertyValue('--duration-move');
-		//var speed = Math.round(parseFloat(durationMoveCode) * speedScale * millisecondsPerSecond);
 
+		//create the actual image img and add it to the html
 		var candyId = "#cell-"+translatePositionToLetter(toCol+1)+"-"+(toRow+1);
 		var imgSrc = document.createElement("img");
 		imgSrc.setAttribute("src", "graphics/" + color + "-candy.png");
@@ -429,34 +431,28 @@ Util.events(board, {
 
 		imgChild.style.setProperty("--speed", speedScale);
 		var animationToWaitFor = "";
+
+		//figure out which direction we're going and how far and apply the appropriate css animation/keyframes
 		if (direction == "up") {
 			var distance = 100 * Math.abs(toRow - fromRow);
-			//keyframes["transform"].push('translateY(' + distance + '%)');
-			//keyframes["transform"].push('translateY(0%)');
 			imgChild.style.setProperty("--distance", distance);
 			imgChild.classList.add("animate-vertical");
 			animationToWaitFor = "move-vertical";
 		}
 		if (direction == "down") {
 			var distance = 100 * Math.abs(toRow - fromRow);
-			//keyframes["transform"].push('translateY(-' + distance + '%)');
-			//keyframes["transform"].push('translateY(0%)');
 			imgChild.style.setProperty("--distance", negative * distance);
 			imgChild.classList.add("animate-vertical");
 			animationToWaitFor = "move-vertical";
 		}
 		if (direction == "left") {
 			var distance = 100 * Math.abs(toCol - fromCol);
-			//keyframes["transform"].push('translateX(' + distance + '%)');
-			//keyframes["transform"].push('translateX(0%)');
 			imgChild.style.setProperty("--distance", distance);
 			imgChild.classList.add("animate-horizontal");
 			animationToWaitFor = "move-horizontal";
 		}
 		if (direction == "right") {
 			var distance = 100 * Math.abs(toCol - fromCol);
-			//keyframes["transform"].push('translateX(-' + distance + '%)');
-			//keyframes["transform"].push('translateX(0%)');
 			imgChild.style.setProperty("--distance", negative * distance);
 			imgChild.classList.add("animate-horizontal");
 			animationToWaitFor = "move-horizontal";
@@ -476,18 +472,12 @@ Util.events(board, {
 		var durationFadeCode = window.getComputedStyle(document.body).getPropertyValue('--duration-fade');
 		var candyId = "#cell-"+translatePositionToLetter(col+1)+"-"+(row+1);
 
+		//simply add the fading animation css class to the candies we will remove
 		var imgChild = Util.one(candyId).querySelector("img");
-
-		/*
-		var styles = {
-			animation: "disappear" + durationFadeCode + " 1"
-		};
-		Util.css(imgChild, styles);
-		*/
 		imgChild.classList.add("disappearing");
 
 		var afterAnimationFunction = function() {
-			imgChild.remove();
+			imgChild.remove(); //remove from DOM after fade animation finishes
 		};
 
 		Util.afterAnimation(imgChild, "disappear").then(afterAnimationFunction, afterAnimationFunction);
@@ -496,13 +486,13 @@ Util.events(board, {
 
 	// update the score
 	"scoreUpdate": function(e) {
-		//get the appropriate color scheme
 		Util.one("#score-div").innerHTML = e.detail.score;
 
-		if (e.detail.candy != null) {
+		if (e.detail.candy != null) { //color the score if we need to update the color due to crushes
 			var color = e.detail.candy.color;
 			var colorCode = window.getComputedStyle(document.body).getPropertyValue('--color-'+color);
 			
+			//get the appropriate color scheme
 			Util.css(Util.one("#score-label"), {"background-color": colorCode});
 			if (color == "purple" || color == "blue" || color == "green" || color == "red") {
 				Util.css(Util.one("#score-label"), {"color": "white"});

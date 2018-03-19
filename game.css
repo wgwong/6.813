@@ -236,16 +236,16 @@ main {
 	--cell: calc(var(--cell-outer) - var(--grid-gap));
 }
 
-.candy-img {
-	height: var(--cell);
-	width: var(--cell);
-	vertical-align: middle;
-}
-
 table {
 	width: calc(var(--board-size) + var(--cell));
 	border-spacing: 0px;
 	border-collapse: collapse;
+}
+
+.candy-img {
+	height: var(--cell);
+	width: var(--cell);
+	vertical-align: middle;
 }
 
 .table-font {
@@ -302,7 +302,6 @@ colored-input:active {
 	margin-right: 10px;
 }
 
-
 .button-grid-item {
 	text-align: center;
 	margin-top: 10px;
@@ -327,7 +326,7 @@ input[type=text] {
 	margin-bottom: 10px;
 }
 
-@media (max-width: 1100px) and (min-width: 600px) {
+@media (max-width: 1000px) and (min-width: 600px) {
 	.flex-container {
 		flex-direction: column;
 	}
@@ -347,6 +346,10 @@ input[type=text] {
 	}
 	.left-column-buttons {
 		width: 200px;
+	}
+
+	main {
+		margin-right: 0px;
 	}
 }
 
@@ -375,8 +378,12 @@ input[type=text] {
 		font-size: 15vw;
 	}
 
+	main {
+		margin-right: 0px;
+	}
+
 	.board {
-		--board-size: 55vw;
+		--board-size: 60vw;
 	}
 
 	.controls {
