@@ -248,6 +248,12 @@ table {
 	vertical-align: middle;
 }
 
+.draggable {
+	--transformX: calc((var(--xoffset) - var(--x)) * 1px);
+	--transformY: calc((var(--yoffset) - var(--y)) * 1px);
+	transform: translate(var(--transformX), var(--transformY));
+}
+
 .table-font {
 	font-size: 24px;
 	text-align: center;
