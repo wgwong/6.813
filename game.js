@@ -191,12 +191,30 @@ var startNewGame = function() {
 	validateCrushable();
 }
 
-var draggableMouseOver = function(e) {
-	console.log("mouse over on : ", e);
-}
+var getUnderlyingCellCoordinates = function(x, y) {
+	var boardRect = Util.one("#cellBoard").getBoundingClientRect();
+	var topLeftRect = Util.one("#cell-a-1").getBoundingClientRect();
+	var headerColumnWidth = topLeftRect.x - boardRect.x;
+	var headerColumnHeight = topLeftRect.y - boardRect.y;
+	var cellWidth = topLeftRect.width;
+	var cellHeight = topLeftRect.height;
 
-var draggableMouseLeave = function(e) {
-	console.log("mouse leave on : ", e);
+	var leftBound = boardRect.x + headerColumnWidth;
+	var rightBound = boardRect.x + boardRect.width;
+	var topBound = boardRect.y + headerColumnHeight;
+	var bottomBound = boardRect.y + boardRect.height;
+
+	if (x < leftBound || x > rightBound) {
+		return false;
+	}
+	if (y < topBound || y > bottomBound) {
+		return false;
+	}
+
+	var column = Math.floor((x - leftBound)/cellWidth);
+	var row = Math.floor((y - topBound)/cellHeight);
+
+	return [row, column];
 }
 
 // Attaching events on document because then we can do it without waiting for
@@ -224,8 +242,6 @@ Util.events(document, {
 		Util.one("#cellBoard").append(trTop);
 
 		//next create the actual board
-
-
 		for (var i = 1; i <= size; i++) {
 			var tr = document.createElement("tr");
 			var th = document.createElement("th");
@@ -382,27 +398,58 @@ Util.events(document, {
 	"mousedown": function(evt) {
 		var target = evt.target;
 		if (target.classList.contains("candy-img")) {
-			var startX = evt.x;
-			var startY = evt.y;
+			var startX = evt.clientX;
+			var startY = evt.clientY;
 			target.classList.add("draggable");
 			target.style.setProperty("--x", startX);
 			target.style.setProperty("--y", startY);
+			target.style.setProperty("--xoffset", startX);
+			target.style.setProperty("--yoffset", startY);
 		}
 	},
 
 	"mouseup": function(evt) {
 		var target = evt.target;
+
+		
+		var coordinates = getUnderlyingCellCoordinates(evt.clientX, evt.clientY);
+
+		if (coordinates !== false) { //if we are dragging a candy and it's above another cell
+			var candyToSwap = board.getCandyAt(coordinates[0], coordinates[1]);
+
+			var cellId = evt.path[1].id; //TODO check this (what if nonexistent/outofbounds)
+			var cellIdSplit = cellId.split("-");
+			var targetCoordinates = [parseInt(cellIdSplit[2])-1, translateLetterToPosition(cellIdSplit[1])-1];
+			var candyDragging = board.getCandyAt(targetCoordinates[0], targetCoordinates[1]);
+			console.log("candyDragging: ", candyDragging);
+			console.log("candyToSwap: ", candyToSwap);
+			board.flipCandies(candyDragging, candyToSwap);
+		}
+
 		target.classList.remove("draggable");
 	},
 
 	"mousemove": function(evt) {
 		evt.preventDefault(); //prevent ghost image
-		var moveX = evt.x;
-		var moveY = evt.y;
+		var dragCandy = Util.one(".draggable");
 
-		if (Util.one(".draggable") !== null) {
-			Util.one(".draggable").style.setProperty("--xoffset", moveX);
-			Util.one(".draggable").style.setProperty("--yoffset", moveY);
+		console.log("evt: ", evt);
+
+		//console.log("offset xy: " + evt.offsetX + "," + evt.offsetY);
+		//console.log("page xy: " + evt.pageX + "," + evt.pageY);
+		//console.log("layer xy: " + evt.layerX + "," + evt.layerY);
+		
+		//console.log("screen xy: " + evt.screenX + "," + evt.screenY);
+
+		if (dragCandy !== null) {
+			dragCandy.style.setProperty("--xoffset", evt.clientX);
+			dragCandy.style.setProperty("--yoffset", evt.clientY);
+			console.log("dragCandy: ", dragCandy);
+			console.log("evt xy: ", evt.pageX + ", " + evt.pageY);
+
+
+			var transformY = window.getComputedStyle(dragCandy).getPropertyValue('--transformY');
+			console.log("transformY: ", transformY);
 		}
 	}
 });
@@ -423,10 +470,6 @@ Util.events(board, {
 		imgSrc.classList.add("candy-img");
 		Util.one(candyId).innerHTML = "";
 		Util.one(candyId).append(imgSrc);
-
-		//add draggable listener
-		Util.one(candyId).addEventListener('mouseover', draggableMouseOver);
-		Util.one(candyId).addEventListener('mouseleave', draggableMouseLeave);
 
 		if (fromCol != null && fromRow != null) { //only animate add if not populating board at start/new game
 			var speedScale = calculateSpeed(fromCol, fromRow, toCol, toRow);

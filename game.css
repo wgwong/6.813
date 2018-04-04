@@ -7,8 +7,8 @@
 	--color-orange: hsl(30, 100%, 50%);
 	--color-blue: hsl(210, 80%, 45%);
 	--color-purple: purple;
-	--duration-move: .1s; /* Duration to move by 1 cell */
-	--duration-fade: .4s;
+	--duration-move: 3.1s; /* Duration to move by 1 cell */
+	--duration-fade: 3.4s;
 }
 
 .animate-vertical {
@@ -237,14 +237,25 @@ main {
 }
 
 table {
-	width: calc(var(--board-size) + var(--cell));
+	width: calc(var(--board-size) + var(--cell-outer));
 	border-spacing: 0px;
 	border-collapse: collapse;
 }
 
+th {
+  height: var(--cell-outer);
+}
+
+td {
+  height: var(--cell-outer);
+  width: var(--cell-outer);
+  border: var(--grid-gap) solid rgb(185,189,198);
+  padding: 0px;
+}
+
 .candy-img {
-	height: var(--cell);
-	width: var(--cell);
+	height: calc(var(--cell) - var(--grid-gap));
+	width: calc(var(--cell) - var(--grid-gap));
 	vertical-align: middle;
 }
 
@@ -262,17 +273,6 @@ table {
 
 .short-height {
 	height: 30px;
-}
-
-th {
-  height: var(--cell-outer);
-  width: 30px;
-}
-
-td {
-  height: var(--cell);
-  width: var(--cell);
-  border: var(--grid-gap) solid rgb(185,189,198);
 }
 
 .controls {
@@ -390,6 +390,10 @@ input[type=text] {
 
 	.board {
 		--board-size: 60vw;
+	}
+
+	.table-font {
+		font-size: 80%;
 	}
 
 	.controls {
