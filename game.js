@@ -4,7 +4,11 @@ Math.seedrandom(0);
 // constants
 const DEFAULT_BOARD_SIZE = 8;
 // set size from URL or to default
-const size = Math.min(10, Math.max(3, Util.getURLParam("size") || DEFAULT_BOARD_SIZE));
+var sizeVal = Util.getURLParam("size");
+if (!Number.isInteger(parseInt(sizeVal))) {
+	sizeVal = DEFAULT_BOARD_SIZE;
+}
+const size = Math.min(10, Math.max(3, sizeVal));
 const letterMapping = {1: 'a', 2: 'b', 3: 'c', 4: 'd', 5: 'e', 6: 'f', 7: 'g', 8: 'h', 9: 'i', 10: 'j'}
 const positionMapping = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7, 'h': 8, 'i': 9, 'j': 10}
 const letterList = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
@@ -185,27 +189,8 @@ Util.events(document, {
 		});*/
 
 		//programmatically create the game grid in the middle
-		//create the header row first
-		var trTop = document.createElement("tr");
-		var thTop = document.createElement("th");
-		thTop.classList.add("short-height");
-		trTop.append(thTop);
-		for (var i = 1; i <= size; i++) {
-			var td = document.createElement("td");
-			td.classList.add("no-borders");
-			td.classList.add("short-height");
-			td.append(translatePositionToLetter(i));
-			trTop.append(td);
-		}
-		Util.one("#cellBoard").append(trTop);
-
-		//next create the actual board
 		for (var i = 1; i <= size; i++) {
 			var tr = document.createElement("tr");
-			var th = document.createElement("th");
-			th.classList.add("no-borders");
-			th.append(i);
-			tr.append(th);
 
 			for (var j = 1; j <= size; j++) {
 				var td = document.createElement("td");
