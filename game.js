@@ -14,6 +14,8 @@ const positionMapping = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7,
 const letterList = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
 const millisecondsPerSecond = 1000; //conversion unit
 const negative = -1;
+const hintTime = 5000; //time in milliseconds before hint is displayed
+var hintId = 0;
 
 // Holds DOM elements that don’t change, to avoid repeatedly querying the DOM
 var dom = {};
@@ -25,23 +27,12 @@ var board = new Board(size);
 // load a rule
 var rules = new Rules(board);
 
-var isNumeric = function(n) {
-	return !isNaN(parseInt(n)) && isFinite(n);
-}
-
 var translatePositionToLetter = function(pos) {
 	return letterMapping[pos];
 }
 var translateLetterToPosition = function(letter) {
 	letter = letter.toLowerCase();
 	return positionMapping[letter];
-}
-
-var getPositionFromInput = function(location) {
-	var col = translateLetterToPosition(location[0])-1; //assuming correct format
-	var row = parseInt(location.substring(1,location.length))-1; //assuming correct format
-	position = board.getCandyAt(row, col);
-	return position;
 }
 
 var calculateDirection = function(fromCol, fromRow, toCol, toRow) {
@@ -74,24 +65,15 @@ var calculateSpeed = function(fromCol, fromRow, toCol, toRow) {
 }
 
 var validateCrushable = function() {
+	if (hasAnimationsInProgress()) {
+		return;
+	}
 	var numCrushes = rules.getCandyCrushes().length;
-	if (numCrushes == 0) {
-		if (hasValidMove()) {
-			Util.one("#showHintButton").removeAttribute("disabled");
-		}
+	if (numCrushes == 0 && rules.getRandomValidMove() !== null) {
+		hintId = window.setTimeout(showHint, hintTime); //activate hint timer
 	} else {
 		crushCandies();
-		Util.one("#showHintButton").setAttribute("disabled", true);
 	}
-}
-
-//check whether the board still has valid moves left
-var hasValidMove = function () {
-	if (rules.getRandomValidMove() == null) {
-		return false;
-	}
-
-	return true;
 }
 
 var cancelAnimations = function() {
@@ -118,9 +100,6 @@ var startNewGame = function() {
 	var colorCode = window.getComputedStyle(document.body).getPropertyValue('--color-light-gray');
 	Util.css(Util.one("#score-label"), {"background-color": colorCode}); //reset score background color to gray (default)
 	Util.css(Util.one("#score-label"), {"color": "black"});
-	if (!hasValidMove()) {
-		Util.one("#showHintButton").setAttribute("disabled", true);
-	}
 	validateCrushable();
 }
 
@@ -158,17 +137,30 @@ var crushCandies = function () {
 
 	var afterAnimationFunction = function() {
 		rules.moveCandiesDown();
-		if (hasValidMove() && rules.getCandyCrushes().length == 0) { //enable show hint button if no valid crushes exist after crushing
-			Util.one("#showHintButton").removeAttribute("disabled");
-		}
 	};
 
-	//if the showhint button hasn't already been pressed while we were animating the crush, then also animate the "moving candies down"
+	//if hint isn't already showing while we were animating the crush, then also animate the "moving candies down"
 	if (Util.all(".pulse").length > 0) {
 		afterAnimationFunction();
 	} else {
 		var durationFadeCode = window.getComputedStyle(document.body).getPropertyValue('--duration-fade');
 		Util.delay((parseFloat(durationFadeCode)*millisecondsPerSecond)).then(afterAnimationFunction, afterAnimationFunction);
+	}
+}
+
+var showHint = function() {
+	var hint = rules.getRandomValidMove();
+	candiesToCrush = rules.getCandiesToCrushGivenMove(hint.candy, hint.direction); //calling this private function because there's no other way to get the other crushable candies without manually checking the entire board by hand
+
+	for (var i in candiesToCrush) {
+		var candyToCrush = candiesToCrush[i];
+		var col = candyToCrush.col;
+		var row = candyToCrush.row;
+		var candyId = "#cell-"+translatePositionToLetter(col+1)+"-"+(row+1);
+		var children = Util.one(candyId).children;
+		for (var i = 0; i < children.length; i++ ) {
+			children[i].classList.add("pulse");
+		};
 	}
 }
 
@@ -209,29 +201,6 @@ Util.events(document, {
 		Util.one("#newGameButton").addEventListener("click", function() {
 			startNewGame();
 		});
-
-		//add event listener for show hint button; add css animation to cells that can be valid moves
-		Util.one("#showHintButton").addEventListener("click", function() {
-			var hint = rules.getRandomValidMove();
-			candiesToCrush = rules.getCandiesToCrushGivenMove(hint.candy, hint.direction); //calling this private function because there's no other way to get the other crushable candies without manually checking the entire board by hand
-
-			//remove any animations including previous hints
-			cancelAnimations();
-
-			for (var i in candiesToCrush) {
-				var candyToCrush = candiesToCrush[i];
-				var col = candyToCrush.col;
-				var row = candyToCrush.row;
-				var candyId = "#cell-"+translatePositionToLetter(col+1)+"-"+(row+1);
-				var children = Util.one(candyId).children;
-				for (var i = 0; i < children.length; i++ ) {
-					children[i].classList.add("pulse");
-				};
-			}
-			validateCrushable();
-			Util.one("#candyLocation").focus(); //input location should gain focus after show hint is pressed
-
-		});
 	},
 
 	// Keyboard events arrive here
@@ -247,6 +216,8 @@ Util.events(document, {
 	"mousedown": function(evt) {
 		var target = evt.target;
 		if (target.classList.contains("candy-img") && !hasAnimationsInProgress()) {
+			cancelAnimations(); //remove hints when clicking on a candy
+			window.clearTimeout(hintId); //stop hint timer
 			var startX = evt.clientX;
 			var startY = evt.clientY;
 			target.classList.add("draggable");
@@ -269,7 +240,7 @@ Util.events(document, {
 			var distanceX = offsetX - startX;
 			var distanceY = offsetY - startY;
 
-			if (distanceX + distanceY > 0) { //don't animate return if we didn't even move the candy
+			if (Math.abs(distanceX + distanceY) > 0) { //don't animate return if we didn't even move the candy
 				target.style.setProperty("--speed", 1);
 				var animationToWaitFor = "move-diagonal";
 				
@@ -280,10 +251,13 @@ Util.events(document, {
 				var afterAnimationFunction = function() {
 					target.classList.remove("draggable");
 					target.classList.remove("animate-diagonal");
+					hintId = window.setTimeout(showHint, hintTime); //activate hint timer
+
 				};
 				Util.afterAnimation(target, animationToWaitFor).then(afterAnimationFunction, afterAnimationFunction);
 			} else {
 				target.classList.remove("draggable");
+				hintId = window.setTimeout(showHint, hintTime); //activate hint timer
 			}
 		}
 
@@ -426,7 +400,6 @@ Util.events(board, {
 			if (direction == "right") {
 				endX += cellSize;
 			}
-
 
 			Util.one(candyId).innerHTML = "";
 			Util.one(candyId).append(imgChild);

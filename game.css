@@ -127,18 +127,6 @@ body {
 	background-color: var(--color-blue);
 }
 
-.background-purple {
-	background-color: var(--color-purple);
-}
-
-.background-green {
-	background-color: var(--color-green);
-}
-
-.background-red {
-	background-color: var(--color-red);
-}
-
 .default-cursor {
 	cursor: default;
 }
