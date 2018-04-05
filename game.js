@@ -47,12 +47,14 @@ var calculateDirection = function(fromCol, fromRow, toCol, toRow) {
 		} else {
 			return "up";
 		}
-	} else { //horizontal
+	} else if (fromRow == toRow){ //horizontal
 		if (fromCol < toCol) {
 			return "right";
 		} else {
 			return "left";
 		}
+	} else {
+		return "diagonal";
 	}
 }
 
@@ -67,93 +69,15 @@ var calculateSpeed = function(fromCol, fromRow, toCol, toRow) {
 	}
 }
 
-var disableAllArrowButtons = function() {
-	Util.one("#leftArrowButton").setAttribute("disabled", true);
-	Util.one("#rightArrowButton").setAttribute("disabled", true);
-	Util.one("#upArrowButton").setAttribute("disabled", true);
-	Util.one("#downArrowButton").setAttribute("disabled", true);
-}
-
-var cleanInputColor = function() {
-	var candyLocation = Util.one("#candyLocation").value;
-
-	if (candyLocation == "") {
-		Util.one("#candyLocation").classList.remove("background-pink");
-	}
-}
-
-var validateInput = function() {
-	var candyLocation = Util.one("#candyLocation").value;
-
-	disableAllArrowButtons();
-	if (candyLocation == "") {
-		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
-		return;
-	}
-	if (candyLocation.length != 2 && candyLocation.length != 3) {
-		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
-		return;
-	}
-	var letterSet = new Set(letterList.slice(0, size));
-	if (!letterSet.has(candyLocation[0].toLowerCase())) {
-		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
-		return;
-	}
-	if (!isNumeric(candyLocation.slice(1, Math.min(3, candyLocation.length)))) {
-		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
-		return;
-	}
-
-	if (!(parseInt(candyLocation.slice(1, Math.min(3, candyLocation.length))) > 0 && parseInt(candyLocation.slice(1, Math.min(3, candyLocation.length))) < size + 1)) {
-		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
-		return;
-	}
-	if (candyLocation.includes(".")) {
-		Util.one("#candyLocation").classList.add("background-pink"); //give invalid background color to indicate invalid location input
-		return;
-	}
-
-	var position = getPositionFromInput(candyLocation);
-
-	var leftValid = rules.isMoveTypeValid(position, "left") > 0;
-	var rightValid = rules.isMoveTypeValid(position, "right") > 0;
-	var upValid = rules.isMoveTypeValid(position, "up") > 0;
-	var downValid = rules.isMoveTypeValid(position, "down") > 0;
-
-	if (leftValid) {
-		Util.one("#leftArrowButton").removeAttribute("disabled");
-	}
-	if (rightValid) {
-		Util.one("#rightArrowButton").removeAttribute("disabled");
-	}
-	if (upValid) {
-		Util.one("#upArrowButton").removeAttribute("disabled");
-	}
-	if (downValid) {
-		Util.one("#downArrowButton").removeAttribute("disabled");
-	}
-	
-	if (leftValid || rightValid || upValid || downValid) {
-		Util.one("#candyLocation").classList.remove("background-pink"); //remove invalid background color only if it's a valid move
-	}
-}
-
 var validateCrushable = function() {
 	var numCrushes = rules.getCandyCrushes().length;
 	if (numCrushes == 0) {
-		Util.one("#crushButton").setAttribute("disabled", true);
 		if (hasValidMove()) {
 			Util.one("#showHintButton").removeAttribute("disabled");
 		}
-		Util.one("#candyLocation").removeAttribute("disabled");
-		Util.one("#candyLocation").classList.add("background-pink");
-		Util.one("#candyLocation").focus();
 	} else {
-		disableAllArrowButtons();
-		Util.one("#crushButton").removeAttribute("disabled");
+		crushCandies();
 		Util.one("#showHintButton").setAttribute("disabled", true);
-		Util.one("#candyLocation").setAttribute("disabled", true);
-		Util.one("#candyLocation").classList.remove("background-pink");
 	}
 }
 
@@ -171,23 +95,28 @@ var cancelAnimations = function() {
 	Util.all(".disappearing").forEach(function(e) {e.classList.remove("disappearing")});
 	Util.all(".animate-vertical").forEach(function(e) {e.classList.remove("animate-vertical")});
 	Util.all(".animate-horizontal").forEach(function(e) {e.classList.remove("animate-horizontal")});
+	Util.all(".animate-diagonal").forEach(function(e) {e.classList.remove("animate-diagonal")});
+}
+
+var hasAnimationsInProgress = function() {
+	var count = 0;
+	count += Util.all(".disappearing").length;
+	count += Util.all(".animate-vertical").length;
+	count += Util.all(".animate-horizontal").length;
+	count += Util.all(".animate-diagonal").length;
+
+	return count !== 0;
 }
 
 var startNewGame = function() {
 	rules.prepareNewGame(); //populate game board at start
 	Util.one("#score-div").innerHTML = "0"; //start game score at 0 no matter what
-	//Util.one("#candyLocation").classList.add("background-pink"); //"invalid input" at start, so color background appropriately
-	Util.one("#candyLocation").value = ""; //clear input box on page load and new game
-	Util.one("#candyLocation").removeAttribute("disabled"); //enable candyLocation input just incase we press new game button while inputbox was disabled during long animation
-	Util.one("#candyLocation").focus(); //focus should be on input box on page load and new game
 	var colorCode = window.getComputedStyle(document.body).getPropertyValue('--color-light-gray');
 	Util.css(Util.one("#score-label"), {"background-color": colorCode}); //reset score background color to gray (default)
 	Util.css(Util.one("#score-label"), {"color": "black"});
 	if (!hasValidMove()) {
 		Util.one("#showHintButton").setAttribute("disabled", true);
 	}
-	//disable all input buttons just in case we press new game button while they were active
-	disableAllArrowButtons();
 	validateCrushable();
 }
 
@@ -217,6 +146,28 @@ var getUnderlyingCellCoordinates = function(x, y) {
 	return [row, column];
 }
 
+//crushes and repopulates candies
+var crushCandies = function () {
+	Util.all(".pulse").forEach(function(e) {e.classList.remove("pulse")}); //remove any hints
+
+	rules.removeCrushes(rules.getCandyCrushes());
+
+	var afterAnimationFunction = function() {
+		rules.moveCandiesDown();
+		if (hasValidMove() && rules.getCandyCrushes().length == 0) { //enable show hint button if no valid crushes exist after crushing
+			Util.one("#showHintButton").removeAttribute("disabled");
+		}
+	};
+
+	//if the showhint button hasn't already been pressed while we were animating the crush, then also animate the "moving candies down"
+	if (Util.all(".pulse").length > 0) {
+		afterAnimationFunction();
+	} else {
+		var durationFadeCode = window.getComputedStyle(document.body).getPropertyValue('--duration-fade');
+		Util.delay((parseFloat(durationFadeCode)*millisecondsPerSecond)).then(afterAnimationFunction, afterAnimationFunction);
+	}
+}
+
 // Attaching events on document because then we can do it without waiting for
 // the DOM to be ready (i.e. before DOMContentLoaded fires)
 Util.events(document, {
@@ -225,9 +176,16 @@ Util.events(document, {
 	"DOMContentLoaded": function() {
 		// Your code here
 
+		//TODO
+		/*
+		Util.events(document.body, {
+			"mouseleave": function(evt) {
+				console.log("mouse left2");
+			}
+		});*/
+
 		//programmatically create the game grid in the middle
 		//create the header row first
-
 		var trTop = document.createElement("tr");
 		var thTop = document.createElement("th");
 		thTop.classList.add("short-height");
@@ -286,102 +244,8 @@ Util.events(document, {
 				};
 			}
 			validateCrushable();
-			validateInput(); //call this after validCrushable because validCrushable will paint the input background red if there's no crushable
 			Util.one("#candyLocation").focus(); //input location should gain focus after show hint is pressed
 
-		});
-
-		//add event listeners for each of the arrow/move buttons
-		Util.one("#leftArrowButton").addEventListener("click", function() {
-			var location = Util.one("#candyLocation").value;
-			var position = getPositionFromInput(location);
-			var col = translateLetterToPosition(location[0])-1; //assuming correct format
-			var row = parseInt(location.substring(1,location.length))-1; //assuming correct format
-
-			if (rules.isMoveTypeValid(position, "left") > 0) {
-				Util.one("#showHintButton").setAttribute("disabled", true);
-				Util.one("#candyLocation").value = "";
-				Util.one("#candyLocation").setAttribute("disabled", true);
-				board.flipCandies(position, board.getCandyAt(row, col-1));
-			}
-			Util.all(".pulse").forEach(function(e) {e.classList.remove("pulse")}); //remove any hints
-			disableAllArrowButtons();
-			Util.one("#candyLocation").focus();
-		});
-
-		Util.one("#rightArrowButton").addEventListener("click", function() {
-			var location = Util.one("#candyLocation").value;
-			var position = getPositionFromInput(location);
-			var col = translateLetterToPosition(location[0])-1; //assuming correct format
-			var row = parseInt(location.substring(1,location.length))-1; //assuming correct format
-
-			if (rules.isMoveTypeValid(position, "right") > 0) {
-				Util.one("#showHintButton").setAttribute("disabled", true);
-				Util.one("#candyLocation").value = "";
-				Util.one("#candyLocation").setAttribute("disabled", true);
-				board.flipCandies(position, board.getCandyAt(row, col+1));
-			}
-			Util.all(".pulse").forEach(function(e) {e.classList.remove("pulse")}); //remove any hints
-			disableAllArrowButtons();
-			Util.one("#candyLocation").focus();
-		});
-
-		Util.one("#upArrowButton").addEventListener("click", function() {
-			var location = Util.one("#candyLocation").value;
-			var position = getPositionFromInput(location);
-			var col = translateLetterToPosition(location[0])-1; //assuming correct format
-			var row = parseInt(location.substring(1,location.length))-1; //assuming correct format
-
-			if (rules.isMoveTypeValid(position, "up") > 0) {
-				Util.one("#showHintButton").setAttribute("disabled", true);
-				Util.one("#candyLocation").value = "";
-				Util.one("#candyLocation").setAttribute("disabled", true);
-				board.flipCandies(position, board.getCandyAt(row-1, col));
-			}
-			Util.all(".pulse").forEach(function(e) {e.classList.remove("pulse")}); //remove any hints
-			disableAllArrowButtons();
-			Util.one("#candyLocation").focus();
-		});
-
-		Util.one("#downArrowButton").addEventListener("click", function() {
-			var location = Util.one("#candyLocation").value;
-			var position = getPositionFromInput(location);
-			var col = translateLetterToPosition(location[0])-1; //assuming correct format
-			var row = parseInt(location.substring(1,location.length))-1; //assuming correct format
-
-			if (rules.isMoveTypeValid(position, "down") > 0) {
-				Util.one("#showHintButton").setAttribute("disabled", true);
-				Util.one("#candyLocation").value = "";
-				Util.one("#candyLocation").setAttribute("disabled", true);
-				board.flipCandies(position, board.getCandyAt(row+1, col));
-			}
-			Util.all(".pulse").forEach(function(e) {e.classList.remove("pulse")}); //remove any hints
-			disableAllArrowButtons();
-			Util.one("#candyLocation").focus();
-		});
-
-		//add event listener for crushbutton; will crush and repopulate crushables
-		Util.one("#crushButton").addEventListener("click", function() {
-			Util.all(".pulse").forEach(function(e) {e.classList.remove("pulse")}); //remove any hints
-			disableAllArrowButtons();
-			Util.one("#crushButton").setAttribute("disabled", true);
-
-			rules.removeCrushes(rules.getCandyCrushes());
-
-			var afterAnimationFunction = function() {
-				rules.moveCandiesDown();
-				if (hasValidMove() && rules.getCandyCrushes().length == 0) { //enable show hint button if no valid crushes exist after crushing
-					Util.one("#showHintButton").removeAttribute("disabled");
-				}
-			};
-
-			//if the showhint button hasn't already been pressed while we were animating the crush, then also animate the "moving candies down"
-			if (Util.all(".pulse").length > 0) {
-				afterAnimationFunction();
-			} else {
-				var durationFadeCode = window.getComputedStyle(document.body).getPropertyValue('--duration-fade');
-				Util.delay((parseFloat(durationFadeCode)*millisecondsPerSecond)).then(afterAnimationFunction, afterAnimationFunction);
-			}
 		});
 	},
 
@@ -397,7 +261,7 @@ Util.events(document, {
 
 	"mousedown": function(evt) {
 		var target = evt.target;
-		if (target.classList.contains("candy-img")) {
+		if (target.classList.contains("candy-img") && !hasAnimationsInProgress()) {
 			var startX = evt.clientX;
 			var startY = evt.clientY;
 			target.classList.add("draggable");
@@ -410,48 +274,86 @@ Util.events(document, {
 
 	"mouseup": function(evt) {
 		var target = evt.target;
-
-		
 		var coordinates = getUnderlyingCellCoordinates(evt.clientX, evt.clientY);
 
-		if (coordinates !== false) { //if we are dragging a candy and it's above another cell
-			var candyToSwap = board.getCandyAt(coordinates[0], coordinates[1]);
+		var returnToOriginalPosition = function() {
+			var startX = parseInt(window.getComputedStyle(target).getPropertyValue('--x'));
+			var startY = parseInt(window.getComputedStyle(target).getPropertyValue('--y'));
+			var offsetX = parseInt(window.getComputedStyle(target).getPropertyValue('--xoffset'));
+			var offsetY = parseInt(window.getComputedStyle(target).getPropertyValue('--yoffset'));
+			var distanceX = offsetX - startX;
+			var distanceY = offsetY - startY;
 
-			var cellId = evt.path[1].id; //TODO check this (what if nonexistent/outofbounds)
-			var cellIdSplit = cellId.split("-");
-			var targetCoordinates = [parseInt(cellIdSplit[2])-1, translateLetterToPosition(cellIdSplit[1])-1];
-			var candyDragging = board.getCandyAt(targetCoordinates[0], targetCoordinates[1]);
-			console.log("candyDragging: ", candyDragging);
-			console.log("candyToSwap: ", candyToSwap);
-			board.flipCandies(candyDragging, candyToSwap);
+			if (distanceX + distanceY > 0) { //don't animate return if we didn't even move the candy
+				target.style.setProperty("--speed", 1);
+				var animationToWaitFor = "move-diagonal";
+				
+				target.style.setProperty("--distanceX", distanceX);
+				target.style.setProperty("--distanceY", distanceY);
+				target.classList.add("animate-diagonal");
+
+				var afterAnimationFunction = function() {
+					target.classList.remove("draggable");
+					target.classList.remove("animate-diagonal");
+				};
+				Util.afterAnimation(target, animationToWaitFor).then(afterAnimationFunction, afterAnimationFunction);
+			} else {
+				target.classList.remove("draggable");
+			}
 		}
 
-		target.classList.remove("draggable");
+		if (coordinates !== false && !hasAnimationsInProgress()) { //if we are dragging a candy and it's above another cell
+			var cellId = evt.path[1].id;
+			var cellIdSplit = cellId.split("-");
+			var targetCoordinates = [parseInt(cellIdSplit[2])-1, translateLetterToPosition(cellIdSplit[1])-1];
+			if (!(coordinates[0] == targetCoordinates[0] && coordinates[1] == targetCoordinates[1])) {
+				var direction = calculateDirection(targetCoordinates[1], targetCoordinates[0], coordinates[1], coordinates[0]);
+
+				var candyDragging = board.getCandyAt(targetCoordinates[0], targetCoordinates[1]);
+				var candyToSwap = board.getCandyAt(coordinates[0], coordinates[1]);
+
+				var isValidMove = rules.isMoveTypeValid(candyDragging, direction);
+				if (Math.abs(coordinates[0] - targetCoordinates[0] + coordinates[1] - targetCoordinates[1]) !== 1) { //moving more than 1 cell is invalid
+					isValidMove = false;
+				}
+
+				if (isValidMove) {
+					board.flipCandies(candyDragging, candyToSwap);
+				} else { //not a legal move
+					returnToOriginalPosition(); //animate return to original position for candy
+				}
+			} else { //same cell, do not flip
+				returnToOriginalPosition(); //animate return to original position for candy
+			}
+		} else if (target.classList.contains("candy-img") && !hasAnimationsInProgress()) {
+			returnToOriginalPosition();	//animate return to original position for candy
+		}
 	},
 
 	"mousemove": function(evt) {
 		evt.preventDefault(); //prevent ghost image
 		var dragCandy = Util.one(".draggable");
 
-		console.log("evt: ", evt);
-
-		//console.log("offset xy: " + evt.offsetX + "," + evt.offsetY);
-		//console.log("page xy: " + evt.pageX + "," + evt.pageY);
-		//console.log("layer xy: " + evt.layerX + "," + evt.layerY);
-		
-		//console.log("screen xy: " + evt.screenX + "," + evt.screenY);
-
 		if (dragCandy !== null) {
 			dragCandy.style.setProperty("--xoffset", evt.clientX);
 			dragCandy.style.setProperty("--yoffset", evt.clientY);
-			console.log("dragCandy: ", dragCandy);
-			console.log("evt xy: ", evt.pageX + ", " + evt.pageY);
-
-
-			var transformY = window.getComputedStyle(dragCandy).getPropertyValue('--transformY');
-			console.log("transformY: ", transformY);
 		}
-	}
+
+		/*
+		console.log("xy: ", evt.x + ", " + evt.y);
+		console.log("client: " + evt.clientX + ", " + evt.clientY);
+		console.log("screen: " + evt.screenX + ", " + evt.screenY);
+		console.log("page: " + evt.pageX + ", " + evt.pageY);
+		console.log("layer: " + evt.layerX + ", " + evt.layerY);
+		console.log("offset: " + evt.offsetX + ", " + evt.offsetX);
+		*/
+	},
+
+	//TODO
+	/*
+	"mouseleave": function(evt) {
+		console.log("mouse left");
+	}*/
 });
 
 // Attaching events to the board
@@ -482,6 +384,7 @@ Util.events(board, {
 			imgChild.classList.add("animate-vertical");
 
 			var afterAnimationFunction = function() {
+				imgChild.classList.remove("animate-vertical");
 				validateCrushable();
 			};
 			Util.afterAnimation(imgChild, "move-vertical").then(afterAnimationFunction, afterAnimationFunction);
@@ -497,57 +400,105 @@ Util.events(board, {
 		var fromRow = e.detail.fromRow;
 		var direction = calculateDirection(fromCol, fromRow, toCol, toRow);
 		var speedScale = calculateSpeed(fromCol, fromRow, toCol, toRow);
-		//var durationMoveCode = window.getComputedStyle(document.body).getPropertyValue('--duration-move');
-		//var speed = Math.round(parseFloat(durationMoveCode) * speedScale * millisecondsPerSecond);
 
 		var candyId = "#cell-"+translatePositionToLetter(toCol+1)+"-"+(toRow+1);
-		var imgSrc = document.createElement("img");
-		imgSrc.setAttribute("src", "graphics/" + color + "-candy.png");
-		imgSrc.classList.add("candy-img");
-		Util.one(candyId).innerHTML = "";
-		Util.one(candyId).append(imgSrc);
-	
-		var imgChild = Util.one(candyId).querySelector("img");
+		var imgChild = document.createElement("img");
+		imgChild.setAttribute("src", "graphics/" + color + "-candy.png");
+		imgChild.classList.add("candy-img");
 
-		imgChild.style.setProperty("--speed", speedScale);
-		var animationToWaitFor = "";
-		if (direction == "up") {
-			var distance = 100 * Math.abs(toRow - fromRow);
-			//keyframes["transform"].push('translateY(' + distance + '%)');
-			//keyframes["transform"].push('translateY(0%)');
-			imgChild.style.setProperty("--distance", distance);
-			imgChild.classList.add("animate-vertical");
-			animationToWaitFor = "move-vertical";
-		}
-		if (direction == "down") {
-			var distance = 100 * Math.abs(toRow - fromRow);
-			//keyframes["transform"].push('translateY(-' + distance + '%)');
-			//keyframes["transform"].push('translateY(0%)');
-			imgChild.style.setProperty("--distance", negative * distance);
-			imgChild.classList.add("animate-vertical");
-			animationToWaitFor = "move-vertical";
-		}
-		if (direction == "left") {
-			var distance = 100 * Math.abs(toCol - fromCol);
-			//keyframes["transform"].push('translateX(' + distance + '%)');
-			//keyframes["transform"].push('translateX(0%)');
-			imgChild.style.setProperty("--distance", distance);
-			imgChild.classList.add("animate-horizontal");
-			animationToWaitFor = "move-horizontal";
-		}
-		if (direction == "right") {
-			var distance = 100 * Math.abs(toCol - fromCol);
-			//keyframes["transform"].push('translateX(-' + distance + '%)');
-			//keyframes["transform"].push('translateX(0%)');
-			imgChild.style.setProperty("--distance", negative * distance);
-			imgChild.classList.add("animate-horizontal");
-			animationToWaitFor = "move-horizontal";
+		//check if draggable
+		var isDraggable = false;
+		var candyFromId = "#cell-"+translatePositionToLetter(fromCol+1)+"-"+(fromRow+1);
+		var imgChildren = Util.one(candyFromId).children;
+
+		var imgFromChild = null;
+		for (var i = 0; i < imgChildren.length; i++) {
+			imgFromChild = imgChildren[i];
+			if (imgFromChild.classList.contains("draggable")) {
+				isDraggable = true;
+				break;
+			}
 		}
 
-		var afterAnimationFunction = function() {
-			validateCrushable();
-		};
-		Util.afterAnimation(imgChild, animationToWaitFor).then(afterAnimationFunction, afterAnimationFunction);
+		//if candy is dragged by mouse, use different animation and start from where the cursor drops the candy
+		if (isDraggable) {
+			var endX = parseInt(window.getComputedStyle(imgFromChild).getPropertyValue('--x'));
+			var endY = parseInt(window.getComputedStyle(imgFromChild).getPropertyValue('--y'));
+			var offsetX = parseInt(window.getComputedStyle(imgFromChild).getPropertyValue('--xoffset'));
+			var offsetY = parseInt(window.getComputedStyle(imgFromChild).getPropertyValue('--yoffset'));
+
+			var cellSize = parseInt(window.getComputedStyle(Util.one(candyFromId)).getPropertyValue('width').split("px")[0]);
+
+			if (direction == "up") {
+				endY -= cellSize;
+			}
+			if (direction == "down") {
+				endY += cellSize;
+			}
+			if (direction == "left") {
+				endX -= cellSize;
+			}
+			if (direction == "right") {
+				endX += cellSize;
+			}
+
+
+			Util.one(candyId).innerHTML = "";
+			Util.one(candyId).append(imgChild);
+
+			imgChild.style.setProperty("--speed", speedScale);
+			var animationToWaitFor = "move-diagonal";
+
+			var distanceX = offsetX - endX;
+			var distanceY = offsetY - endY;
+			imgChild.style.setProperty("--distanceX", distanceX);
+			imgChild.style.setProperty("--distanceY", distanceY);
+			imgChild.classList.add("animate-diagonal");
+
+			var afterAnimationFunction = function() {
+				imgChild.classList.remove("animate-diagonal");
+				validateCrushable();
+			};
+			Util.afterAnimation(imgChild, animationToWaitFor).then(afterAnimationFunction, afterAnimationFunction);
+		} else {
+			Util.one(candyId).innerHTML = "";
+			Util.one(candyId).append(imgChild);
+		
+
+			imgChild.style.setProperty("--speed", speedScale);
+			var animationToWaitFor = "";
+			if (direction == "up") {
+				var distance = 100 * Math.abs(toRow - fromRow);
+				imgChild.style.setProperty("--distance", distance);
+				imgChild.classList.add("animate-vertical");
+				animationToWaitFor = "move-vertical";
+			}
+			if (direction == "down") {
+				var distance = 100 * Math.abs(toRow - fromRow);
+				imgChild.style.setProperty("--distance", negative * distance);
+				imgChild.classList.add("animate-vertical");
+				animationToWaitFor = "move-vertical";
+			}
+			if (direction == "left") {
+				var distance = 100 * Math.abs(toCol - fromCol);
+				imgChild.style.setProperty("--distance", distance);
+				imgChild.classList.add("animate-horizontal");
+				animationToWaitFor = "move-horizontal";
+			}
+			if (direction == "right") {
+				var distance = 100 * Math.abs(toCol - fromCol);
+				imgChild.style.setProperty("--distance", negative * distance);
+				imgChild.classList.add("animate-horizontal");
+				animationToWaitFor = "move-horizontal";
+			}
+
+			var afterAnimationFunction = function() {
+				imgChild.classList.remove("animate-vertical");
+				imgChild.classList.remove("animate-horizontal");
+				validateCrushable();
+			};
+			Util.afterAnimation(imgChild, animationToWaitFor).then(afterAnimationFunction, afterAnimationFunction);
+		}
 	},
 
 	// remove a candy from the board
@@ -560,12 +511,6 @@ Util.events(board, {
 
 		var imgChild = Util.one(candyId).querySelector("img");
 
-		/*
-		var styles = {
-			animation: "disappear" + durationFadeCode + " 1"
-		};
-		Util.css(imgChild, styles);
-		*/
 		imgChild.classList.add("disappearing");
 
 		var afterAnimationFunction = function() {

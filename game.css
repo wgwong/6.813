@@ -7,8 +7,8 @@
 	--color-orange: hsl(30, 100%, 50%);
 	--color-blue: hsl(210, 80%, 45%);
 	--color-purple: purple;
-	--duration-move: 3.1s; /* Duration to move by 1 cell */
-	--duration-fade: 3.4s;
+	--duration-move: .1s; /* Duration to move by 1 cell */
+	--duration-fade: .4s;
 }
 
 .animate-vertical {
@@ -20,6 +20,13 @@
 
 .animate-horizontal {
 	animation-name: move-horizontal;
+	animation-duration: calc(var(--speed) * var(--duration-move));
+	animation-iteration-count: 1;
+	animation-timing-function: linear;
+}
+
+.animate-diagonal {
+	animation-name: move-diagonal;
 	animation-duration: calc(var(--speed) * var(--duration-move));
 	animation-iteration-count: 1;
 	animation-timing-function: linear;
@@ -40,6 +47,15 @@
 		}
 	100% {
 		transform: translateX(0);
+	}
+}
+
+@keyframes move-diagonal {
+	0% {
+		transform: translate(calc(var(--distanceX) * 1px), calc(var(--distanceY) * 1px));
+		}
+	100% {
+		transform: translate(0);
 	}
 }
 
@@ -121,10 +137,6 @@ body {
 
 .background-red {
 	background-color: var(--color-red);
-}
-
-.background-pink {
-	background-color: pink;
 }
 
 .default-cursor {
@@ -275,63 +287,6 @@ td {
 	height: 30px;
 }
 
-.controls {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-}
-
-colored-input {
-	background-color: white;
-}
-
-colored-input:hover {
-	background-color: pink;
-}
-
-colored-input:active {
-	background-color: pink;
-}
-
-.arrow-control-grid {
-	display: flex;
-	flex-direction: row;
-}
-
-.button-grid-container-one {
-	display: flex;
-}
-.button-grid-container-three {
-	display: flex;
-	flex-direction: column;
-	margin-left: 10px;
-	margin-right: 10px;
-}
-
-.button-grid-item {
-	text-align: center;
-	margin-top: 10px;
-	width: 120px;
-	margin: auto;
-}
-
-.arrow-button-image {
-	width: 18px;
-}
-
-input[type=text] {
-	height: 90%;
-	padding-bottom: 10px;
-	width: 100%;
-	border-radius: 8px;
-	border: 2px solid rgb(185,189,198);
-	text-align: center;
-	font-size: 24px;
-	font-weight: bold;
-	margin-top: 10px;
-	margin-bottom: 10px;
-}
-
 @media (max-width: 1000px) and (min-width: 600px) {
 	.flex-container {
 		flex-direction: column;
@@ -395,13 +350,4 @@ input[type=text] {
 	.table-font {
 		font-size: 80%;
 	}
-
-	.controls {
-		width: 80vw;
-	}
-
-	.button-grid-item {
-		width: 25vw;
-	}
-
 }
