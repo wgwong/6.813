@@ -70,7 +70,7 @@ var validateCrushable = function() {
 	}
 	var numCrushes = rules.getCandyCrushes().length;
 	if (numCrushes == 0 && rules.getRandomValidMove() !== null) {
-		hintId = window.setTimeout(showHint, hintTime); //activate hint timer
+		hintId = setTimeout(showHint, hintTime); //activate hint timer
 	} else {
 		crushCandies();
 	}
@@ -150,17 +150,19 @@ var crushCandies = function () {
 
 var showHint = function() {
 	var hint = rules.getRandomValidMove();
-	candiesToCrush = rules.getCandiesToCrushGivenMove(hint.candy, hint.direction); //calling this private function because there's no other way to get the other crushable candies without manually checking the entire board by hand
+	if (hint !== null) {
+		candiesToCrush = rules.getCandiesToCrushGivenMove(hint.candy, hint.direction); //calling this private function because there's no other way to get the other crushable candies without manually checking the entire board by hand
 
-	for (var i in candiesToCrush) {
-		var candyToCrush = candiesToCrush[i];
-		var col = candyToCrush.col;
-		var row = candyToCrush.row;
-		var candyId = "#cell-"+translatePositionToLetter(col+1)+"-"+(row+1);
-		var children = Util.one(candyId).children;
-		for (var i = 0; i < children.length; i++ ) {
-			children[i].classList.add("pulse");
-		};
+		for (var i in candiesToCrush) {
+			var candyToCrush = candiesToCrush[i];
+			var col = candyToCrush.col;
+			var row = candyToCrush.row;
+			var candyId = "#cell-"+translatePositionToLetter(col+1)+"-"+(row+1);
+			var children = Util.one(candyId).children;
+			for (var i = 0; i < children.length; i++ ) {
+				children[i].classList.add("pulse");
+			};
+		}
 	}
 }
 
@@ -171,14 +173,6 @@ Util.events(document, {
 	// runs at the end of start-up when the DOM is ready
 	"DOMContentLoaded": function() {
 		// Your code here
-
-		//TODO
-		/*
-		Util.events(document.body, {
-			"mouseleave": function(evt) {
-				console.log("mouse left2");
-			}
-		});*/
 
 		//programmatically create the game grid in the middle
 		for (var i = 1; i <= size; i++) {
@@ -251,13 +245,13 @@ Util.events(document, {
 				var afterAnimationFunction = function() {
 					target.classList.remove("draggable");
 					target.classList.remove("animate-diagonal");
-					hintId = window.setTimeout(showHint, hintTime); //activate hint timer
+					hintId = setTimeout(showHint, hintTime); //activate hint timer
 
 				};
 				Util.afterAnimation(target, animationToWaitFor).then(afterAnimationFunction, afterAnimationFunction);
 			} else {
 				target.classList.remove("draggable");
-				hintId = window.setTimeout(showHint, hintTime); //activate hint timer
+				hintId = setTimeout(showHint, hintTime); //activate hint timer
 			}
 		}
 
@@ -297,22 +291,34 @@ Util.events(document, {
 			dragCandy.style.setProperty("--xoffset", evt.clientX);
 			dragCandy.style.setProperty("--yoffset", evt.clientY);
 		}
-
-		/*
-		console.log("xy: ", evt.x + ", " + evt.y);
-		console.log("client: " + evt.clientX + ", " + evt.clientY);
-		console.log("screen: " + evt.screenX + ", " + evt.screenY);
-		console.log("page: " + evt.pageX + ", " + evt.pageY);
-		console.log("layer: " + evt.layerX + ", " + evt.layerY);
-		console.log("offset: " + evt.offsetX + ", " + evt.offsetX);
-		*/
 	},
-
-	//TODO
-	/*
+	
 	"mouseleave": function(evt) {
-		console.log("mouse left");
-	}*/
+		var target = Util.one(".draggable");
+		if (target !== null) {
+			var startX = parseInt(window.getComputedStyle(target).getPropertyValue('--x'));
+			var startY = parseInt(window.getComputedStyle(target).getPropertyValue('--y'));
+			var offsetX = parseInt(window.getComputedStyle(target).getPropertyValue('--xoffset'));
+			var offsetY = parseInt(window.getComputedStyle(target).getPropertyValue('--yoffset'));
+			var distanceX = offsetX - startX;
+			var distanceY = offsetY - startY;
+
+			target.style.setProperty("--speed", 1);
+			var animationToWaitFor = "move-diagonal";
+			
+			target.style.setProperty("--distanceX", distanceX);
+			target.style.setProperty("--distanceY", distanceY);
+			target.classList.add("animate-diagonal");
+
+			var afterAnimationFunction = function() {
+				target.classList.remove("draggable");
+				target.classList.remove("animate-diagonal");
+				hintId = setTimeout(showHint, hintTime); //activate hint timer
+
+			};
+			Util.afterAnimation(target, animationToWaitFor).then(afterAnimationFunction, afterAnimationFunction);
+		}
+	}
 });
 
 // Attaching events to the board
