@@ -251,6 +251,7 @@ td {
   max-height: calc(400px / var(--size));
   border: var(--grid-gap) solid var(--grid-color);
   padding: 0px;
+  line-height: 0px;
 }
 
 .candy-img {
